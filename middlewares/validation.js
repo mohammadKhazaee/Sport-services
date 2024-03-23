@@ -1,13 +1,14 @@
-const { body, query, param } = require('express-validator')
+const { body } = require('express-validator')
 const bcrypt = require('bcryptjs')
+const persianRegex = require('persian-rex')
 
 const User = require('../models/user')
 const PhoneVerification = require('../models/phone-verification')
 const cities = require('../data/cities.json')
 const provinces = require('../data/provinces.json')
-const throwError = require('../utils/throwError')
 
-const phoneNumberRegex = /\b09[0-9]{9}\b/
+const phoneNumberRegex = /^09[0-9]{9}$/
+const englishRegex = /^[a-zA-Z ]+$/
 
 exports.postLogin = [
 	body('phoneNumber')
@@ -54,7 +55,7 @@ exports.putSignup = [
 	}),
 	body('confirmPass')
 		.trim()
-		.custom(async (confirmPass, { req }) => {
+		.custom((confirmPass, { req }) => {
 			if (confirmPass !== req.body.password) throw { message: `passwords don't match`, code: 422 }
 			return true
 		}),
@@ -64,16 +65,22 @@ exports.putSignup = [
 		.withMessage('first name is empty')
 		.isLength({ min: 3 })
 		.withMessage('first name is too short')
-		.isAlpha()
-		.withMessage('first name should be english character'),
+		.custom((fName) => {
+			if (!(persianRegex.letter.test(fName) || englishRegex.test(fName)))
+				throw { message: 'first name can only contain farsi or english characters', code: 422 }
+			return true
+		}),
 	body('lName')
 		.trim()
 		.notEmpty()
 		.withMessage('last name is empty')
 		.isLength({ min: 3 })
 		.withMessage('last name is too short')
-		.isAlpha()
-		.withMessage('last name should be english character'),
+		.custom((lName) => {
+			if (!(persianRegex.letter.test(lName) || englishRegex.test(lName)))
+				throw { message: 'last name can only contain farsi or english characters', code: 422 }
+			return true
+		}),
 	body('province')
 		.trim()
 		.notEmpty()
