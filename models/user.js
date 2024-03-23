@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize')
 
 const sequelize = require('../utils/database')
+const PhoneVerification = require('../models/phone-verification')
 
 const User = sequelize.define('user', {
 	userId: {
@@ -54,6 +55,17 @@ const User = sequelize.define('user', {
 		defaultValue: null,
 		unique: true,
 	},
+})
+
+User.addHook('afterCreate', (user) => {
+	PhoneVerification.update(
+		{ verifyCode: null, verifyCodeExp: null, verified: true },
+		{
+			where: {
+				phoneNumber: user.phoneNumber,
+			},
+		}
+	)
 })
 
 module.exports = User
