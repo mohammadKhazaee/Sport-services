@@ -144,10 +144,10 @@ Router.put('/signup', validator.putSignup, authController.putSignup)
 Router.post('/login', validator.postLogin, authController.postLogin)
 
 // PUT /auth/verify-number
-Router.put('/verifyNumber', validator.putVerifyNumber, authController.putVerifyNumber)
+Router.put('/verify-number', validator.putVerifyNumber, authController.putVerifyNumber)
 
 // POST /auth/verify-number
-Router.post('/verifyNumber', validator.postVerifyNumber, authController.postVerifyNumber)
+Router.post('/verify-number', validator.postVerifyNumber, authController.postVerifyNumber)
 
 // POST /auth/check-email
 Router.post('/check-email', validator.postCheckEmail, authController.postCheckEmail)

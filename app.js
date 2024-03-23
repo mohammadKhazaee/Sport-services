@@ -10,6 +10,7 @@ const { v4: uuidv4 } = require('uuid')
 require('dotenv').config()
 const helmet = require('helmet')
 const compression = require('compression')
+const { check } = require('express-validator')
 
 const routes = require('./routes/routes')
 

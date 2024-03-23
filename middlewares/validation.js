@@ -45,7 +45,13 @@ exports.putSignup = [
 			const user = await User.findOne({ where: { email } })
 			if (user) throw { message: 'E-Mail address already exists!', code: 409 }
 		}),
-	body('password', 'password is not strong enough').trim().isStrongPassword({ minLength: 8 }),
+	body('password', 'password is not strong enough').trim().isStrongPassword({
+		minLength: 8,
+		minLowercase: 0,
+		minUppercase: 0,
+		minNumbers: 0,
+		minSymbols: 0,
+	}),
 	body('confirmPass')
 		.trim()
 		.custom(async (confirmPass, { req }) => {
@@ -57,21 +63,26 @@ exports.putSignup = [
 		.notEmpty()
 		.withMessage('first name is empty')
 		.isLength({ min: 3 })
-		.withMessage('first name is too short'),
+		.withMessage('first name is too short')
+		.isAlpha()
+		.withMessage('first name should be english character'),
 	body('lName')
 		.trim()
 		.notEmpty()
 		.withMessage('last name is empty')
 		.isLength({ min: 3 })
-		.withMessage('first name is too short'),
+		.withMessage('last name is too short')
+		.isAlpha()
+		.withMessage('last name should be english character'),
 	body('province')
 		.trim()
 		.notEmpty()
 		.withMessage('province is empty')
-		.custom((province) => {
+		.custom((province, { req }) => {
 			const foundProvince = provinces.find((p) => p.name === province)
 			if (!foundProvince) throw { message: 'wrong province', code: 422 }
 			req.province = foundProvince
+			return true
 		}),
 	body('city')
 		.trim()
@@ -80,6 +91,7 @@ exports.putSignup = [
 		.custom((city, { req }) => {
 			const foundCity = cities.find((c) => c.name === city && c.province_id === req.province.id)
 			if (!foundCity) throw { message: 'wrong city', code: 422 }
+			return true
 		}),
 	body('gender').trim().notEmpty().withMessage('gender is empty').isIn(['male', 'female']),
 	body('phoneNumber')
@@ -90,7 +102,9 @@ exports.putSignup = [
 			if (!phoneNumberRegex.test(phoneNumber))
 				throw { message: 'wrong phone number format', code: 422 }
 			const existedNumber = await PhoneVerification.findByPk(phoneNumber)
-			if (!existedNumber) throw { message: 'phone number doesnt exists', code: 404 }
+			if (!existedNumber) throw { message: 'verification code has not been sent yet', code: 404 }
+			if (existedNumber.verified)
+				throw { message: 'another account with this number exists', code: 409 }
 			req.existedNumber = existedNumber
 			return true
 		}),
