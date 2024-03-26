@@ -14,7 +14,7 @@ const { check } = require('express-validator')
 
 const routes = require('./routes/routes')
 
-const PORT = process.env.PORT || 8080
+const PORT = process.env.PORT || 3000
 const LIARA_URL = process.env.LIARA_URL || 'http://localhost:' + PORT
 
 // const options = {

@@ -6,7 +6,7 @@ require('dotenv').config()
 
 const User = require('../models/user')
 const PhoneVerification = require('../models/phone-verification')
-const throwError = require('../utils/throwError')
+const buildError = require('../utils/buildError')
 
 exports.putSignup = async (req, res, next) => {
 	const errors = validationResult(req).array()
@@ -32,7 +32,7 @@ exports.putSignup = async (req, res, next) => {
 	try {
 		const existedNumber = req.existedNumber
 		if (!(existedNumber.verifyCode === verifyCode && existedNumber.verifyCodeExp > Date.now()))
-			return throwError('invalid code', 422)
+			throw buildError('invalid code', 422)
 
 		const hashedPw = await bcrypt.hash(password, 12)
 		const createdUser = await User.create({
@@ -138,7 +138,7 @@ exports.postVerifyNumber = async (req, res, next) => {
 				existedNumber.verifyCode === req.body.verifyCode && existedNumber.verifyCodeExp > Date.now()
 			)
 		)
-			return throwError('invalid code', 422)
+			throw buildError('invalid code', 422)
 		res.status(200).json({ message: 'valid code' })
 	} catch (err) {
 		if (!err.statusCode) err.statusCode = 500
