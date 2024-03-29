@@ -10,9 +10,12 @@ const { v4: uuidv4 } = require('uuid')
 require('dotenv').config()
 const helmet = require('helmet')
 const compression = require('compression')
-const { check } = require('express-validator')
 
 const routes = require('./routes/routes')
+const Complex = require('./models/complex')
+const User = require('./models/user')
+const Facility = require('./models/facility')
+const Comment = require('./models/comment')
 
 const PORT = process.env.PORT || 3000
 const LIARA_URL = process.env.LIARA_URL || 'http://localhost:' + PORT
@@ -89,6 +92,34 @@ app.use((req, res, next) => {
 // })
 
 app.use(routes)
+
+User.hasMany(Complex, { onDelete: 'CASCADE', foreignKey: { name: 'userId', allowNull: false } })
+Complex.belongsTo(User, { foreignKey: { name: 'userId' } })
+
+Complex.belongsToMany(Facility, {
+	through: 'Facility_Instance',
+	foreignKey: { name: 'facilityId', allowNull: false },
+})
+Facility.belongsToMany(Complex, {
+	through: 'Facility_Instance',
+	foreignKey: { name: 'complexId', allowNull: false },
+})
+
+Complex.hasMany(Comment, {
+	onDelete: 'CASCADE',
+	foreignKey: { name: 'complexId', allowNull: false },
+})
+Comment.belongsTo(Complex, { foreignKey: { name: 'complexId' } })
+
+Comment.hasOne(Comment, {
+	onDelete: 'CASCADE',
+	as: 'parentComment',
+	foreignKey: { name: 'parentCommentId' },
+})
+Comment.belongsTo(Comment, { foreignKey: { name: 'parentCommentId' } })
+
+User.hasMany(Comment, { onDelete: 'CASCADE', foreignKey: { name: 'userId', allowNull: false } })
+Comment.belongsTo(User, { foreignKey: { name: 'userId' } })
 
 sequelize
 	.sync()
