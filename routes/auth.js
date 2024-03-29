@@ -152,4 +152,7 @@ Router.post('/verify-number', validator.postVerifyNumber, authController.postVer
 // POST /auth/check-email
 Router.post('/check-email', validator.postCheckEmail, authController.postCheckEmail)
 
+// POST /auth/reset-password
+Router.post('/reset-password', validator.postResetPassword, authController.postResetPassword)
+
 module.exports = Router

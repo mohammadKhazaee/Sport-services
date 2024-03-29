@@ -134,6 +134,21 @@ exports.putVerifyNumber = [
 		}),
 ]
 
+exports.postResetPassword = [
+	body('phoneNumber')
+		.trim()
+		.notEmpty()
+		.withMessage('phoneNumber is empty')
+		.custom(async (phoneNumber, { req }) => {
+			if (!phoneNumberRegex.test(phoneNumber))
+				throw { message: 'wrong phone number format', code: 422 }
+			const existedUser = await User.findOne({ where: { phoneNumber } })
+			if (!existedUser) throw { message: 'phone number doesnt exists', code: 404 }
+			req.existedUser = existedUser
+			return true
+		}),
+]
+
 exports.postVerifyNumber = [
 	body('phoneNumber')
 		.trim()
@@ -160,6 +175,7 @@ exports.postCheckEmail = [
 		.normalizeEmail({ gmail_remove_dots: false })
 		.custom(async (email) => {
 			const user = await User.findOne({ where: { email } })
+			console.log('here')
 			if (user) throw { message: 'E-Mail address already exists!', code: 409 }
 		}),
 ]

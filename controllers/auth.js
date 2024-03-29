@@ -166,3 +166,34 @@ exports.postCheckEmail = async (req, res, next) => {
 		next(err)
 	}
 }
+
+exports.postResetPassword = async (req, res, next) => {
+	try {
+		const errors = validationResult(req).array()
+		if (errors.length > 0) {
+			let error = new Error('Validation failed.')
+			error.statusCode = 422
+			if (errors[0].msg.code) {
+				error.message = errors[0].msg.message
+				error.statusCode = errors[0].msg.code
+			} else error.message = errors[0].msg
+			return next(error)
+		}
+		const newPassword = bcrypt.hashSync((Math.random() * 10).toString(), 8).substring(0, 10)
+		const ghasedak = new Ghasedak(process.env.SMS_API_KEY)
+		ghasedak.verification({
+			receptor: req.body.phoneNumber,
+			type: '1',
+			template: 'verify',
+			param1: newPassword,
+		})
+		const hashedPw = bcrypt.hashSync(newPassword, 12)
+		req.existedUser.password = hashedPw
+		req.existedUser.save()
+		res.status(200).json({ message: 'password has been reset' })
+	} catch (err) {
+		console.log(err)
+		if (!err.statusCode) err.statusCode = 500
+		next(err)
+	}
+}
