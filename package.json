@@ -6,7 +6,9 @@
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"start": "node app.js",
-		"start:dev": "nodemon app.js"
+		"start:dev": "nodemon app.js",
+		"db:seed": "npx sequelize-cli db:seed:all",
+		"db:unseed": "npx sequelize-cli db:seed:undo"
 	},
 	"author": "mohammad khazaee",
 	"license": "MIT",
@@ -30,6 +32,7 @@
 		"uuid": "^9.0.1"
 	},
 	"devDependencies": {
-		"nodemon": "^3.1.0"
+		"nodemon": "^3.1.0",
+		"sequelize-cli": "^6.6.2"
 	}
 }

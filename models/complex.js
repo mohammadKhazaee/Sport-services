@@ -14,11 +14,6 @@ const Complex = sequelize.define('complex', {
 		allowNull: false,
 		unique: true,
 	},
-	sheba_num: {
-		type: Sequelize.STRING,
-		allowNull: false,
-		unique: true,
-	},
 	name: {
 		type: Sequelize.STRING,
 		allowNull: false,
@@ -58,6 +53,11 @@ const Complex = sequelize.define('complex', {
 		type: Sequelize.TINYINT,
 		allowNull: false,
 		defaultValue: 0,
+	},
+	onlineRes: {
+		type: Sequelize.BOOLEAN,
+		allowNull: false,
+		defaultValue: false,
 	},
 })
 
