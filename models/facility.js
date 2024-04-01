@@ -1,9 +1,10 @@
-const Sequelize = require('sequelize')
+const { Sequelize, Model } = require('sequelize')
 
 const sequelize = require('../utils/database')
 
-const Facility = sequelize.define(
-	'facility',
+class Facility extends Model {}
+
+Facility.init(
 	{
 		facilityId: {
 			type: Sequelize.INTEGER,
@@ -17,7 +18,11 @@ const Facility = sequelize.define(
 			unique: true,
 		},
 	},
-	{ timestamps: false }
+	{
+		sequelize,
+		modelName: 'facility',
+		timestamps: false,
+	}
 )
 
 module.exports = Facility
