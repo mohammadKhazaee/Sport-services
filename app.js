@@ -12,10 +12,13 @@ const helmet = require('helmet')
 const compression = require('compression')
 
 const routes = require('./routes/routes')
-const Complex = require('./models/complex')
 const User = require('./models/user')
+const Complex = require('./models/complex')
+const ComplexFacility = require('./models/complex-facility')
+const ComplexCategory = require('./models/complex-category')
 const Facility = require('./models/facility')
 const Comment = require('./models/comment')
+const Category = require('./models/category')
 
 const PORT = process.env.PORT || 3000
 const LIARA_URL = process.env.LIARA_URL || 'http://localhost:' + PORT
@@ -97,12 +100,12 @@ User.hasMany(Complex, { onDelete: 'CASCADE', foreignKey: { name: 'userId', allow
 Complex.belongsTo(User, { foreignKey: { name: 'userId' } })
 
 Complex.belongsToMany(Facility, {
-	through: 'Facility_Instance',
-	foreignKey: { name: 'facilityId', allowNull: false },
+	through: ComplexFacility,
+	foreignKey: { name: 'complexId', allowNull: false },
 })
 Facility.belongsToMany(Complex, {
-	through: 'Facility_Instance',
-	foreignKey: { name: 'complexId', allowNull: false },
+	through: ComplexFacility,
+	foreignKey: { name: 'facilityId', allowNull: false },
 })
 
 Complex.hasMany(Comment, {
@@ -111,12 +114,26 @@ Complex.hasMany(Comment, {
 })
 Comment.belongsTo(Complex, { foreignKey: { name: 'complexId' } })
 
-Comment.hasOne(Comment, {
+Comment.belongsTo(Comment, {
+	foreignKey: { name: 'parentId' },
 	onDelete: 'CASCADE',
-	as: 'parentComment',
-	foreignKey: { name: 'parentCommentId' },
+	onUpdate: 'CASCADE',
 })
-Comment.belongsTo(Comment, { foreignKey: { name: 'parentCommentId' } })
+
+Complex.belongsToMany(Category, {
+	through: ComplexCategory,
+	foreignKey: { name: 'complexId', allowNull: false },
+})
+Category.belongsToMany(Complex, {
+	through: ComplexCategory,
+	foreignKey: { name: 'categoryId', allowNull: false },
+})
+
+Category.belongsTo(Category, {
+	foreignKey: { name: 'parentId' },
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE',
+})
 
 User.hasMany(Comment, { onDelete: 'CASCADE', foreignKey: { name: 'userId', allowNull: false } })
 Comment.belongsTo(User, { foreignKey: { name: 'userId' } })

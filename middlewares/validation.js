@@ -1,4 +1,4 @@
-const { body } = require('express-validator')
+const { body, query } = require('express-validator')
 const bcrypt = require('bcryptjs')
 const persianRegex = require('persian-rex')
 
@@ -9,6 +9,7 @@ const provinces = require('../data/provinces.json')
 
 const phoneNumberRegex = /^09[0-9]{9}$/
 const englishRegex = /^[a-zA-Z ]+$/
+const complexSortOptions = ['PRICE_DESC', 'PRICE_ASC', 'SCORE_ASC', 'SCORE_DESC']
 
 exports.postLogin = [
 	body('phoneNumber')
@@ -178,4 +179,48 @@ exports.postCheckEmail = [
 			console.log('here')
 			if (user) throw { message: 'E-Mail address already exists!', code: 409 }
 		}),
+]
+
+exports.postComplex = []
+
+exports.getListAll = [
+	query('minPrice').trim().optional().isNumeric({ no_symbols: false }),
+	query('maxPrice').trim().optional().isNumeric({ no_symbols: false }),
+	query('onlineRes').trim().optional().isBoolean().toBoolean(),
+	query('facilities')
+		.trim()
+		.optional()
+		.custom((facilities) => {
+			if (!facilities) return true
+			const facilitiesArr = facilities.split(',').map((f) => +f.trim())
+			for (const f of facilitiesArr)
+				if (isNaN(f)) throw { message: 'wrong facilities filter', code: 422 }
+			return true
+		}),
+	query('sortType')
+		.trim()
+		.toUpperCase()
+		.optional()
+		.isIn(complexSortOptions)
+		.customSanitizer((sortType) => {
+			const sortParts = sortType.split('_')
+			switch (sortParts[0]) {
+				case 'PRICE':
+					return ['maxPrice', sortParts[1]]
+				case 'SCORE':
+					return ['score', sortParts[1]]
+			}
+		}),
+	// query('size')
+	// 	.trim()
+	// 	.optional()
+	// 	.customSanitizer((sortType) => {
+	// 		const sortParts = sortType.split('_')
+	// 		switch (sortParts[0]) {
+	// 			case 'PRICE':
+	// 				return ['maxPrice', sortParts[1]]
+	// 			case 'SCORE':
+	// 				return ['score', sortParts[1]]
+	// 		}
+	// 	}),
 ]

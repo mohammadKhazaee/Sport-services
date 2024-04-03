@@ -1,12 +1,14 @@
 const express = require('express')
 
 const authRouter = require('./auth')
+const complexRouter = require('./complex')
 const mainRouter = require('./main')
 const isAuth = require('../middlewares/is-auth')
 
 const Router = express.Router()
 
 Router.use('/auth', authRouter)
+Router.use('/complex', complexRouter)
 Router.use(mainRouter)
 
 // Handle not found routes

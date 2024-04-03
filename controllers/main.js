@@ -6,9 +6,7 @@ exports.getIndex = async (req, res, next) => {
 	try {
 		res.status(200).json({ message: 'just nothing!' })
 	} catch (err) {
-		if (!err.statusCode) {
-			err.statusCode = 500
-		}
+		if (!err.statusCode) err.statusCode = 500
 		next(err)
 	}
 }
