@@ -6,6 +6,7 @@ const User = require('../models/user')
 const PhoneVerification = require('../models/phone-verification')
 const cities = require('../data/cities.json')
 const provinces = require('../data/provinces.json')
+const Category = require('../models/category')
 
 const phoneNumberRegex = /^09[0-9]{9}$/
 const englishRegex = /^[a-zA-Z ]+$/
@@ -184,10 +185,10 @@ exports.postCheckEmail = [
 exports.postComplex = []
 
 exports.getListAll = [
-	query('minPrice').trim().optional().isNumeric({ no_symbols: false }),
-	query('maxPrice').trim().optional().isNumeric({ no_symbols: false }),
-	query('onlineRes').trim().optional().isBoolean().toBoolean(),
-	query('facilities')
+	query('minPrice', 'invalid minPrice').trim().optional().isNumeric({ no_symbols: false }),
+	query('maxPrice', 'invalid maxPrice').trim().optional().isNumeric({ no_symbols: false }),
+	query('onlineRes', 'invalid onlineRes').trim().optional().isBoolean().toBoolean(),
+	query('facilities', 'invalid facility ids')
 		.trim()
 		.optional()
 		.custom((facilities) => {
@@ -197,7 +198,7 @@ exports.getListAll = [
 				if (isNaN(f)) throw { message: 'wrong facilities filter', code: 422 }
 			return true
 		}),
-	query('sortType')
+	query('sortType', 'invalid sortType')
 		.trim()
 		.toUpperCase()
 		.optional()
@@ -211,6 +212,23 @@ exports.getListAll = [
 					return ['score', sortParts[1]]
 			}
 		}),
+	query('city', 'invalid city')
+		.trim()
+		.optional()
+		.custom((city) => {
+			const foundCity = cities.find((c) => c.name === city)
+			if (!foundCity) throw { message: 'wrong city', code: 422 }
+			return true
+		}),
+	query('categoryId', 'invalid categoryId')
+		.trim()
+		.optional()
+		.custom(async (categoryId) => {
+			const foundCat = await Category.findByPk(categoryId)
+			if (!foundCat) throw { message: 'wrong category', code: 422 }
+			return true
+		}),
+	query('page', 'wrong page number').trim().optional().isNumeric({ no_symbols: true }),
 	// query('size')
 	// 	.trim()
 	// 	.optional()

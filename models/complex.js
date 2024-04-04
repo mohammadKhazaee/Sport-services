@@ -5,6 +5,8 @@ const { QueryTypes } = require('sequelize')
 const sequelize = require('../utils/database')
 const Category = require('./category')
 
+const COMPLEX_PER_PAGE = 15
+
 class Complex extends Model {
 	static async getComplexes({
 		minPrice,
@@ -14,8 +16,10 @@ class Complex extends Model {
 		city,
 		categoryId,
 		sortType,
+		page = 1,
 	} = {}) {
-		const findQuery = {}
+		const findQuery = {},
+			orderQuery = sortType || ['createdAt', 'DESC']
 
 		if (onlineRes) findQuery.onlineRes = onlineRes
 		if (city) findQuery.city = city
@@ -55,21 +59,25 @@ class Complex extends Model {
 					type: QueryTypes.SELECT,
 				}
 			)
-			console.log(findQuery.complexId)
 			findQuery.complexId = {
 				[Op.in]: complexIds
 					.map((cId) => cId.complexId)
 					.filter((cId) => (findQuery.complexId ? findQuery.complexId[Op.in].includes(cId) : true)),
 			}
-			console.log(findQuery.complexId[Op.in])
 		}
 
 		return Complex.findAll({
 			include: ['facilities'],
 			where: findQuery,
-			order: [sortType],
-			// limit: 100,
+			order: [orderQuery],
+			offset: (page - 1) * COMPLEX_PER_PAGE,
+			limit: COMPLEX_PER_PAGE,
 		})
+	}
+
+	static async countAll() {
+		const tables = await sequelize.query('SHOW TABLE STATUS', { type: QueryTypes.SELECT })
+		return tables.filter((t) => t.Name === 'complexes').map((t) => t.Rows)
 	}
 }
 
