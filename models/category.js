@@ -29,9 +29,9 @@ class Category extends Model {
 			`
 				SELECT c1.* FROM categories c1
 				LEFT JOIN categories c2 ON c2.parentId = c1.categoryId
-				WHERE c1.categoryId in (:subCategoryIdsArray) AND c2.categoryId IS NULL;
-			`,
-			{ replacements: { subCategoryIdsArray }, type: QueryTypes.SELECT }
+				WHERE c2.categoryId IS NULL AND c1.categoryId ` +
+				(subCategoryIds.length > 0 ? `in (:subCategoryIdsArray);` : '=:categoryId'),
+			{ replacements: { subCategoryIdsArray, categoryId }, type: QueryTypes.SELECT }
 		)
 	}
 }
