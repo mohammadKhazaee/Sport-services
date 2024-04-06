@@ -19,6 +19,7 @@ const ComplexCategory = require('./models/complex-category')
 const Facility = require('./models/facility')
 const Comment = require('./models/comment')
 const Category = require('./models/category')
+const ExerciseSession = require('./models/exerciseSession')
 
 const PORT = process.env.PORT || 3000
 const LIARA_URL = process.env.LIARA_URL || 'http://localhost:' + PORT
@@ -96,9 +97,23 @@ app.use((req, res, next) => {
 
 app.use(routes)
 
-User.hasMany(Complex, { onDelete: 'CASCADE', foreignKey: { name: 'userId', allowNull: false } })
-Complex.belongsTo(User, { foreignKey: { name: 'userId' } })
+// complex and complex owner association
+User.hasMany(Complex, { onDelete: 'CASCADE', foreignKey: 'userId' })
+Complex.belongsTo(User, { as: 'owner', foreignKey: 'userId' })
 
+// exercise session associations
+User.belongsToMany(Complex, {
+	as: 'rented_complex',
+	foreignKey: 'complexId',
+	through: ExerciseSession,
+})
+Complex.belongsToMany(User, { as: 'renter', foreignKey: 'userId', through: ExerciseSession })
+User.hasMany(ExerciseSession, { onDelete: 'CASCADE', foreignKey: 'userId' })
+ExerciseSession.belongsTo(User, { as: 'renter', foreignKey: 'userId' })
+Complex.hasMany(ExerciseSession, { onDelete: 'CASCADE', foreignKey: 'complexId' })
+ExerciseSession.belongsTo(Complex, { as: 'rented_complex', foreignKey: 'complexId' })
+
+// facility related associations
 Complex.belongsToMany(Facility, {
 	through: ComplexFacility,
 	foreignKey: { name: 'complexId', allowNull: false },
@@ -108,18 +123,7 @@ Facility.belongsToMany(Complex, {
 	foreignKey: { name: 'facilityId', allowNull: false },
 })
 
-Complex.hasMany(Comment, {
-	onDelete: 'CASCADE',
-	foreignKey: { name: 'complexId', allowNull: false },
-})
-Comment.belongsTo(Complex, { foreignKey: { name: 'complexId' } })
-
-Comment.belongsTo(Comment, {
-	foreignKey: { name: 'parentId' },
-	onDelete: 'CASCADE',
-	onUpdate: 'CASCADE',
-})
-
+// category related associations
 Complex.belongsToMany(Category, {
 	through: ComplexCategory,
 	foreignKey: { name: 'complexId', allowNull: false },
@@ -135,12 +139,25 @@ Category.belongsTo(Category, {
 	onUpdate: 'CASCADE',
 })
 
+// comment related associations
+Complex.hasMany(Comment, {
+	onDelete: 'CASCADE',
+	foreignKey: { name: 'complexId', allowNull: false },
+})
+Comment.belongsTo(Complex, { foreignKey: { name: 'complexId' } })
+
+Comment.belongsTo(Comment, {
+	foreignKey: { name: 'parentId' },
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE',
+})
+
 User.hasMany(Comment, { onDelete: 'CASCADE', foreignKey: { name: 'userId', allowNull: false } })
 Comment.belongsTo(User, { foreignKey: { name: 'userId' } })
 
 sequelize
-	.sync()
-	// .sync({ force: true })
+	// .sync()
+	.sync({ force: true })
 	.then((result) => {
 		app.listen(PORT)
 	})
