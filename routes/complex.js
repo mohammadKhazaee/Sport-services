@@ -18,4 +18,10 @@ Router.post('/', isAuth, validator.postComplex, complexController.postComplex)
 // // /team/:teamId => GET
 // Router.get('/team/:teamId', complexController.getTeam)
 
+// /complex/:complexId => GET
+Router.get('/:complexId', complexController.getComplex)
+
+// /complex/:complexId => GET
+Router.get('/schedule/:complexId', complexController.getComplexSchedule)
+
 module.exports = Router

@@ -104,10 +104,10 @@ Complex.belongsTo(User, { as: 'owner', foreignKey: 'userId' })
 // exercise session associations
 User.belongsToMany(Complex, {
 	as: 'rented_complex',
-	foreignKey: 'complexId',
+	foreignKey: 'userId',
 	through: ExerciseSession,
 })
-Complex.belongsToMany(User, { as: 'renter', foreignKey: 'userId', through: ExerciseSession })
+Complex.belongsToMany(User, { as: 'renter', foreignKey: 'complexId', through: ExerciseSession })
 User.hasMany(ExerciseSession, { onDelete: 'CASCADE', foreignKey: 'userId' })
 ExerciseSession.belongsTo(User, { as: 'renter', foreignKey: 'userId' })
 Complex.hasMany(ExerciseSession, { onDelete: 'CASCADE', foreignKey: 'complexId' })
@@ -156,8 +156,8 @@ User.hasMany(Comment, { onDelete: 'CASCADE', foreignKey: { name: 'userId', allow
 Comment.belongsTo(User, { foreignKey: { name: 'userId' } })
 
 sequelize
-	// .sync()
-	.sync({ force: true })
+	.sync()
+	// .sync({ force: true })
 	.then((result) => {
 		app.listen(PORT)
 	})

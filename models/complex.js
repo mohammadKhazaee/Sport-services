@@ -4,6 +4,7 @@ const { QueryTypes } = require('sequelize')
 
 const sequelize = require('../utils/database')
 const Category = require('./category')
+const Comment = require('./comment')
 
 const COMPLEX_PER_PAGE = 15
 
@@ -72,6 +73,13 @@ class Complex extends Model {
 			order: [orderQuery],
 			offset: (page - 1) * COMPLEX_PER_PAGE,
 			limit: COMPLEX_PER_PAGE,
+		})
+	}
+
+	static fetchComplexById(complexId) {
+		return Complex.findByPk(complexId, {
+			include: ['facilities', Comment],
+			attributes: { exclude: ['registration_num', 'createdAt', 'updatedAt', 'userId'] },
 		})
 	}
 

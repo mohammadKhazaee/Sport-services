@@ -1,9 +1,22 @@
 const { Sequelize, Model } = require('sequelize')
-const { QueryTypes } = require('sequelize')
+const { QueryTypes, Op } = require('sequelize')
 
 const sequelize = require('../utils/database')
 
-class ExerciseSession extends Model {}
+class ExerciseSession extends Model {
+	static fetchComplexSchedules(complexId, startOfWeek, endOfWeek) {
+		const transformedStart = startOfWeek.toISOString().slice(0, 19).replace('T', ' '),
+			transformedEnd = endOfWeek.toISOString().slice(0, 19).replace('T', ' ')
+
+		return ExerciseSession.findAll({
+			where: {
+				complexId,
+				startDate: { [Op.between]: [transformedStart, transformedEnd] },
+			},
+			attributes: { exclude: ['createdAt', 'updatedAt'] },
+		})
+	}
+}
 
 ExerciseSession.init(
 	{

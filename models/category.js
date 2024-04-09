@@ -4,9 +4,15 @@ const { QueryTypes } = require('sequelize')
 const sequelize = require('../utils/database')
 
 class Category extends Model {
-	static async getChildren(categoryId) {
+	static getChildren(categoryId) {
 		return sequelize.query(`SELECT * FROM categories WHERE parentId =:categoryId`, {
 			replacements: { categoryId },
+			type: QueryTypes.SELECT,
+		})
+	}
+
+	static getAllNodes() {
+		return sequelize.query('SELECT * FROM categories', {
 			type: QueryTypes.SELECT,
 		})
 	}
