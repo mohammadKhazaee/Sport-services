@@ -49,9 +49,7 @@ exports.postComplex = async (req, res, next) => {
 
 exports.getComplex = async (req, res, next) => {
 	try {
-		const complexId = req.params.complexId
-
-		const complex = await Complex.fetchComplexById(complexId)
+		const complex = await Complex.fetchComplexById(req.params.complexId)
 
 		res.status(200).json({ message: 'complex fetched', complex })
 	} catch (err) {
@@ -64,10 +62,8 @@ exports.getComplexSchedule = async (req, res, next) => {
 	try {
 		const complexId = req.params.complexId,
 			{ page = 1 } = req.query
-		const startOfWeek = new Date(new Date().setHours(0, 0, 0) + (page - 1) * 7 * 24 * 3600000)
-		const endOfWeek = new Date(new Date().setHours(0, 0, 0) + page * 7 * 24 * 3600000)
 
-		const schedules = await fetchComplexSchedules(complexId, startOfWeek, endOfWeek)
+		const schedules = await fetchComplexSchedules(complexId, page)
 
 		res.status(200).json({ message: 'complex schedules fetched', schedules })
 	} catch (err) {

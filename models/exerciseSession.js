@@ -4,17 +4,24 @@ const { QueryTypes, Op } = require('sequelize')
 const sequelize = require('../utils/database')
 
 class ExerciseSession extends Model {
-	static fetchComplexSchedules(complexId, startOfWeek, endOfWeek) {
-		const transformedStart = startOfWeek.toISOString().slice(0, 19).replace('T', ' '),
-			transformedEnd = endOfWeek.toISOString().slice(0, 19).replace('T', ' ')
-
-		return ExerciseSession.findAll({
+	static async fetchComplexSchedules(complexId, page) {
+		const currentDate = new Date()
+		const schedules = await ExerciseSession.findAll({
 			where: {
 				complexId,
-				startDate: { [Op.between]: [transformedStart, transformedEnd] },
 			},
 			attributes: { exclude: ['createdAt', 'updatedAt'] },
+			// raw: true,
 		})
+		for (const s of schedules) {
+			if (s.endDate && s.endDate.getTime() <= currentDate) {
+				s.status = 'open'
+				s.userId = null
+				s.endDate = null
+				s.save()
+			}
+		}
+		return schedules
 	}
 }
 
@@ -35,8 +42,20 @@ ExerciseSession.init(
 			defaultValue: null,
 			allowNull: true,
 		},
-		startDate: {
+		endDate: {
 			type: Sequelize.DATE,
+			allowNull: true,
+		},
+		week_offset: {
+			type: Sequelize.TINYINT,
+			allowNull: false,
+		},
+		day_of_week: {
+			type: Sequelize.TINYINT,
+			allowNull: false,
+		},
+		time_of_day: {
+			type: Sequelize.TIME,
 			allowNull: false,
 		},
 		price: {
