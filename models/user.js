@@ -18,6 +18,11 @@ User.init(
 			allowNull: false,
 			unique: true,
 		},
+		sheba_number: {
+			type: Sequelize.STRING,
+			allowNull: true,
+			defaultValue: null,
+		},
 		fName: {
 			type: Sequelize.STRING,
 			allowNull: false,

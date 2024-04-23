@@ -133,6 +133,15 @@ Complex.init(
 			type: Sequelize.STRING,
 			allowNull: false,
 		},
+		registration_number: {
+			type: Sequelize.STRING,
+			allowNull: false,
+			unique: true,
+		},
+		phoneNumber: {
+			type: Sequelize.STRING,
+			allowNull: false,
+		},
 		price: {
 			type: Sequelize.INTEGER,
 			allowNull: true,

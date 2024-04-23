@@ -1,8 +1,25 @@
 const { Sequelize, Model } = require('sequelize')
 
 const sequelize = require('../utils/database')
+const Complex = require('./complex')
 
-class ComplexRequest extends Model {}
+class ComplexRequest extends Model {
+	static async sendRequest(complexId) {
+		try {
+			return await ComplexRequest.create({
+				complexId,
+			})
+		} catch (err) {
+			Complex.destroy({
+				where: {
+					complexId,
+				},
+			})
+			if (!err.statusCode) throw new Error('problem while saving complex request')
+			throw err
+		}
+	}
+}
 
 ComplexRequest.init(
 	{
@@ -27,4 +44,5 @@ ComplexRequest.init(
 		modelName: 'complex_request',
 	}
 )
+
 module.exports = ComplexRequest

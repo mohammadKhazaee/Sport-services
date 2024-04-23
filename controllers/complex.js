@@ -2,6 +2,7 @@ const { validationResult } = require('express-validator')
 
 const Complex = require('../models/complex')
 const { fetchComplexSchedules } = require('../models/exerciseSession')
+const ComplexRequest = require('../models/complexRequest')
 
 exports.getComplexes = async (req, res, next) => {
 	try {
@@ -59,6 +60,7 @@ exports.putComplex = async (req, res, next) => {
 			facilities,
 			description,
 			phone_number,
+			registration_number,
 		} = req.body
 
 		const complex = new Complex({
@@ -72,10 +74,12 @@ exports.putComplex = async (req, res, next) => {
 			closeTime,
 			session_length: session_length.toString(),
 			description,
-			phone_number,
+			phoneNumber: phone_number,
+			registration_number,
 			userId: req.userId,
 		})
-		await complex.save({ facilities, categories })
+		const complexDoc = await complex.save({ facilities, categories })
+		await ComplexRequest.sendRequest(complexDoc.complexId)
 
 		res.status(200).json({ message: 'complex created', complex })
 	} catch (err) {

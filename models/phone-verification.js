@@ -30,7 +30,7 @@ PhoneVerification.init(
 	},
 	{
 		sequelize,
-		modelName: 'PhoneVerification',
+		modelName: 'phone_verification',
 	}
 )
 module.exports = PhoneVerification

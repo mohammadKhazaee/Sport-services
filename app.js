@@ -19,6 +19,7 @@ const Facility = require('./models/facility')
 const Comment = require('./models/comment')
 const Category = require('./models/category')
 const ExerciseSession = require('./models/exerciseSession')
+const ComplexRequest = require('./models/complexRequest')
 
 const PORT = process.env.PORT || 3000
 const LIARA_URL = process.env.LIARA_URL || 'http://localhost:' + PORT
@@ -113,6 +114,13 @@ Comment.belongsTo(Comment, {
 	onDelete: 'CASCADE',
 	onUpdate: 'CASCADE',
 })
+
+// complexRequest related associations
+Complex.hasMany(ComplexRequest, {
+	onDelete: 'CASCADE',
+	foreignKey: { name: 'complexId', allowNull: false },
+})
+ComplexRequest.belongsTo(Complex, { foreignKey: { name: 'complexId' } })
 
 User.hasMany(Comment, { onDelete: 'CASCADE', foreignKey: { name: 'userId', allowNull: false } })
 Comment.belongsTo(User, { foreignKey: { name: 'userId' } })
