@@ -18,9 +18,8 @@ exports.getComplexes = async (req, res, next) => {
 
 		const { minPrice, maxPrice, onlineRes, facilities, city, size, categoryId, sortType, page } =
 			req.query
-
-		const complexs = await Complex.getComplexes({
-			verified: true,
+		const filters = {
+			verified: false,
 			minPrice,
 			maxPrice,
 			onlineRes,
@@ -28,12 +27,16 @@ exports.getComplexes = async (req, res, next) => {
 			city,
 			size,
 			categoryId,
-			sortType,
-			page,
-		})
-		const totalCount = await Complex.countAll()
+		}
+		const [complexes, totalCount] = await Promise.All([
+			Complex.getComplexes(filters, {
+				sortType,
+				page,
+			}),
+			Complex.countAll(filters),
+		])
 
-		res.status(200).json({ message: 'complexes fetched', complexs, totalCount })
+		res.status(200).json({ message: 'complexes fetched', complexes, totalCount })
 	} catch (err) {
 		if (!err.statusCode) err.statusCode = 500
 		next(err)

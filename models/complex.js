@@ -15,68 +15,71 @@ const TimeHelper = require('../utils/timeHelper')
 const COMPLEX_PER_PAGE = 15
 const WEEKS_COVERED = 12
 
-class Complex extends Model {
-	static async getComplexes({
-		verified,
-		minPrice,
-		maxPrice,
-		onlineRes,
-		facilities,
-		city,
-		size,
-		categoryId,
-		sortType,
-		page = 1,
-	} = {}) {
-		const findQuery = {},
-			orderQuery = sortType || ['createdAt', 'DESC']
+async function buildFilterQuery({
+	verified,
+	minPrice,
+	maxPrice,
+	onlineRes,
+	facilityIds,
+	city,
+	size,
+	categoryIds,
+}) {
+	const findQuery = {}
 
-		if (verified) findQuery.verified = verified
-		if (onlineRes) findQuery.onlineRes = onlineRes
-		if (city) findQuery.city = city
-		if (size) findQuery.size = size
-		if (minPrice)
-			findQuery.price = {
-				[Op.gte]: minPrice,
-			}
-		if (maxPrice)
-			findQuery.price = {
-				[Op.lte]: maxPrice,
-			}
-		if (facilities) {
-			const facilityArray = facilities.split(',')
-			const complexIds = await sequelize.query(
-				`SELECT complexId FROM complex_facilities WHERE facilityId IN (:facilities) GROUP BY complexId HAVING COUNT(*) = :facCount`,
-				{
-					replacements: {
-						facilities: facilityArray,
-						facCount: facilityArray.length,
-					},
-					type: QueryTypes.SELECT,
-				}
-			)
-			findQuery.complexId = {
-				[Op.in]: complexIds.map((c) => c.complexId),
-			}
+	if (verified) findQuery.verified = verified
+	if (onlineRes) findQuery.onlineRes = onlineRes
+	if (city) findQuery.city = city
+	if (size) findQuery.size = size
+	if (minPrice)
+		findQuery.price = {
+			[Op.gte]: minPrice,
 		}
-		if (categoryId) {
-			const categoryArray = await Category.getSubLeafs(categoryId)
-			const categoryIdArray = categoryArray.map((c) => c.categoryId)
-			const complexIds = await sequelize.query(
-				`SELECT complexId FROM complex_categories WHERE categoryId IN (:categoryIds)`,
-				{
-					replacements: {
-						categoryIds: categoryIdArray,
-					},
-					type: QueryTypes.SELECT,
-				}
-			)
-			findQuery.complexId = {
-				[Op.in]: complexIds
-					.map((cId) => cId.complexId)
-					.filter((cId) => (findQuery.complexId ? findQuery.complexId[Op.in].includes(cId) : true)),
-			}
+	if (maxPrice)
+		findQuery.price = {
+			[Op.lte]: maxPrice,
 		}
+	if (facilityIds) {
+		const facilityArray = facilityIds.split(',')
+		const complexIds = await sequelize.query(
+			`SELECT complexId FROM complex_facilities WHERE facilityId IN (:facilities) GROUP BY complexId HAVING COUNT(*) = :facCount`,
+			{
+				replacements: {
+					facilities: facilityArray,
+					facCount: facilityArray.length,
+				},
+				type: QueryTypes.SELECT,
+			}
+		)
+		findQuery.complexId = {
+			[Op.in]: complexIds.map((c) => c.complexId),
+		}
+	}
+	if (categoryIds) {
+		const categoryArray = await Category.getSubLeafs(categoryIds)
+		const categoryIdsArray = categoryArray.map((c) => c.categoryIds)
+		const complexIds = await sequelize.query(
+			`SELECT complexId FROM complex_categories WHERE categoryId IN (:categoryIds)`,
+			{
+				replacements: {
+					categoryIds: categoryIdsArray,
+				},
+				type: QueryTypes.SELECT,
+			}
+		)
+		findQuery.complexId = {
+			[Op.in]: complexIds
+				.map((cId) => cId.complexId)
+				.filter((cId) => (findQuery.complexId ? findQuery.complexId[Op.in].includes(cId) : true)),
+		}
+	}
+	return findQuery
+}
+
+class Complex extends Model {
+	static async getComplexes(filters = {}, { sortType, page = 1 } = {}) {
+		const orderQuery = sortType || ['createdAt', 'DESC']
+		const findQuery = await buildFilterQuery(filters)
 
 		return Complex.findAll({
 			include: ['facilities'],
@@ -94,9 +97,11 @@ class Complex extends Model {
 		})
 	}
 
-	static async countAll() {
-		const tables = await sequelize.query('SHOW TABLE STATUS', { type: QueryTypes.SELECT })
-		return tables.filter((t) => t.Name === 'complexes').map((t) => t.Rows)
+	static async countAll(filters = {}) {
+		const findQuery = await buildFilterQuery(filters)
+		return Complex.count({
+			where: findQuery,
+		})
 	}
 }
 
