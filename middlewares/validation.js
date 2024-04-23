@@ -1,6 +1,5 @@
 const { body, query } = require('express-validator')
 const bcrypt = require('bcryptjs')
-const persianRegex = require('persian-rex')
 
 const User = require('../models/user')
 const PhoneVerification = require('../models/phone-verification')
@@ -10,6 +9,8 @@ const Category = require('../models/category')
 
 const phoneNumberRegex = /^09[0-9]{9}$/
 const englishRegex = /^[a-zA-Z ]+$/
+const persianRegex =
+	/^[ \u06A9\u06AF\u06C0\u06CC\u060C\u062A\u062B\u062C\u062D\u062E\u062F\u063A\u064A\u064B\u064C\u064D\u064E\u064F\u067E\u0670\u0686\u0698\u200C\u0621-\u0629\u0630-\u0639\u0641-\u0654]+$/
 const complexSortOptions = ['PRICE_DESC', 'PRICE_ASC', 'SCORE_ASC', 'SCORE_DESC']
 const sizeOptions = [5, 6, 7, 8, 9, 10, 11]
 
