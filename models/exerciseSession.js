@@ -4,17 +4,18 @@ const { QueryTypes, Op } = require('sequelize')
 const sequelize = require('../utils/database')
 
 class ExerciseSession extends Model {
-	static async fetchComplexSchedules(complexId, page) {
+	static async fetchComplexSchedules(complexId) {
 		const currentDate = new Date()
 		const schedules = await ExerciseSession.findAll({
 			where: {
 				complexId,
+				week_offset: { [Op.in]: [0, 1, 2] },
 			},
 			attributes: { exclude: ['createdAt', 'updatedAt'] },
 			// raw: true,
 		})
 		for (const s of schedules) {
-			if (s.endDate && s.endDate.getTime() <= currentDate) {
+			if ((s.status === 'booked' || s.status === 'closed') && s.endDate.getTime() <= currentDate) {
 				s.status = 'open'
 				s.userId = null
 				s.endDate = null
@@ -45,6 +46,7 @@ ExerciseSession.init(
 		endDate: {
 			type: Sequelize.DATE,
 			allowNull: true,
+			defaultValue: null,
 		},
 		week_offset: {
 			type: Sequelize.TINYINT,
@@ -65,6 +67,7 @@ ExerciseSession.init(
 		status: {
 			type: Sequelize.ENUM(['booked', 'open', 'closed', 'booking']),
 			allowNull: false,
+			defaultValue: 'open',
 		},
 	},
 	{

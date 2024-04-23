@@ -11,6 +11,7 @@ const Category = require('../models/category')
 const phoneNumberRegex = /^09[0-9]{9}$/
 const englishRegex = /^[a-zA-Z ]+$/
 const complexSortOptions = ['PRICE_DESC', 'PRICE_ASC', 'SCORE_ASC', 'SCORE_DESC']
+const sizeOptions = [5, 6, 7, 8, 9, 10, 11]
 
 exports.postLogin = [
 	body('phoneNumber')
@@ -136,7 +137,7 @@ exports.putVerifyNumber = [
 		}),
 ]
 
-exports.postResetPassword = [
+exports.patchResetPassword = [
 	body('phoneNumber')
 		.trim()
 		.notEmpty()
@@ -182,9 +183,9 @@ exports.postCheckEmail = [
 		}),
 ]
 
-exports.postComplex = []
+exports.putComplex = []
 
-exports.getListAll = [
+exports.getComlexes = [
 	query('minPrice', 'invalid minPrice').trim().optional().isNumeric({ no_symbols: false }),
 	query('maxPrice', 'invalid maxPrice').trim().optional().isNumeric({ no_symbols: false }),
 	query('onlineRes', 'invalid onlineRes').trim().optional().isBoolean().toBoolean(),
@@ -229,16 +230,12 @@ exports.getListAll = [
 			return true
 		}),
 	query('page', 'wrong page number').trim().optional().isNumeric({ no_symbols: true }),
-	// query('size')
-	// 	.trim()
-	// 	.optional()
-	// 	.customSanitizer((sortType) => {
-	// 		const sortParts = sortType.split('_')
-	// 		switch (sortParts[0]) {
-	// 			case 'PRICE':
-	// 				return ['maxPrice', sortParts[1]]
-	// 			case 'SCORE':
-	// 				return ['score', sortParts[1]]
-	// 		}
-	// 	}),
+	query('size')
+		.trim()
+		.optional()
+		.custom(async (size) => {
+			if (!sizeOptions.find((s) => s === +size)) throw { message: 'invalid size', code: 422 }
+			return true
+		})
+		.customSanitizer((size) => +size),
 ]

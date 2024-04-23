@@ -6,11 +6,11 @@ const isAuth = require('../middlewares/is-auth')
 
 const Router = express.Router()
 
-// /list-all => GET
-Router.get('/list-all', validator.getListAll, complexController.getListAll)
+// / => GET
+Router.get('/', validator.getComlexes, complexController.getComplexes)
 
-// /complex => POST
-Router.post('/', isAuth, validator.postComplex, complexController.postComplex)
+// /complex => PUT
+Router.put('/', isAuth, validator.putComplex, complexController.putComplex)
 
 // // /teams => GET
 // Router.get('/teams', validator.getTeams, complexController.getTeams)

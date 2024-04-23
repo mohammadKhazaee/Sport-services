@@ -169,7 +169,7 @@ exports.postCheckEmail = async (req, res, next) => {
 	}
 }
 
-exports.postResetPassword = async (req, res, next) => {
+exports.patchResetPassword = async (req, res, next) => {
 	try {
 		const errors = validationResult(req).array()
 		if (errors.length > 0) {

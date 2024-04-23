@@ -3,7 +3,7 @@ const { validationResult } = require('express-validator')
 const Complex = require('../models/complex')
 const { fetchComplexSchedules } = require('../models/exerciseSession')
 
-exports.getListAll = async (req, res, next) => {
+exports.getComplexes = async (req, res, next) => {
 	try {
 		const errors = validationResult(req).array()
 		if (errors.length > 0) {
@@ -20,11 +20,13 @@ exports.getListAll = async (req, res, next) => {
 			req.query
 
 		const complexs = await Complex.getComplexes({
+			verified: true,
 			minPrice,
 			maxPrice,
 			onlineRes,
 			facilities,
 			city,
+			size,
 			categoryId,
 			sortType,
 			page,
@@ -38,9 +40,41 @@ exports.getListAll = async (req, res, next) => {
 	}
 }
 
-exports.postComplex = async (req, res, next) => {
+exports.putComplex = async (req, res, next) => {
 	try {
-		res.status(200).json({ message: 'success' })
+		const {
+			name,
+			categories,
+			city,
+			address,
+			size,
+			onlineRes,
+			price,
+			openTime,
+			closeTime,
+			session_length,
+			facilities,
+			description,
+			phone_number,
+		} = req.body
+
+		const complex = new Complex({
+			name,
+			city,
+			address,
+			size,
+			onlineRes,
+			price,
+			openTime,
+			closeTime,
+			session_length: session_length.toString(),
+			description,
+			phone_number,
+			userId: req.userId,
+		})
+		await complex.save({ facilities, categories })
+
+		res.status(200).json({ message: 'complex created', complex })
 	} catch (err) {
 		if (!err.statusCode) err.statusCode = 500
 		next(err)
@@ -60,10 +94,9 @@ exports.getComplex = async (req, res, next) => {
 
 exports.getComplexSchedule = async (req, res, next) => {
 	try {
-		const complexId = req.params.complexId,
-			{ page = 1 } = req.query
+		const complexId = req.params.complexId
 
-		const schedules = await fetchComplexSchedules(complexId, page)
+		const schedules = await fetchComplexSchedules(complexId)
 
 		res.status(200).json({ message: 'complex schedules fetched', schedules })
 	} catch (err) {
