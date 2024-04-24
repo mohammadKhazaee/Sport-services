@@ -1,9 +1,14 @@
 'use strict'
+require('dotenv').config()
+
 const parseCsv = require('../utils/parse-csv')
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
 	async up(queryInterface, Sequelize) {
+		// makes sure seeder only works in development and testing mode
+		if (process.env.NODE_ENV === 'production') return
+
 		const rawComplexes = await parseCsv('complex')
 		await queryInterface.bulkInsert(
 			'complexes',
@@ -28,6 +33,9 @@ module.exports = {
 	},
 
 	async down(queryInterface, Sequelize) {
+		// makes sure seeder only works in development and testing mode
+		if (process.env.NODE_ENV === 'production') return
+
 		await queryInterface.bulkDelete('complexes', null, {})
 	},
 }

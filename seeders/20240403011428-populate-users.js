@@ -4,6 +4,9 @@ const parseCsv = require('../utils/parse-csv')
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
 	async up(queryInterface, Sequelize) {
+		// makes sure seeder only works in development and testing mode
+		if (process.env.NODE_ENV === 'production') return
+
 		const rawUsers = await parseCsv('user')
 		await queryInterface.bulkInsert(
 			'users',
@@ -24,6 +27,9 @@ module.exports = {
 	},
 
 	async down(queryInterface, Sequelize) {
+		// makes sure seeder only works in development and testing mode
+		if (process.env.NODE_ENV === 'production') return
+
 		await queryInterface.bulkDelete('users', null, {})
 	},
 }
