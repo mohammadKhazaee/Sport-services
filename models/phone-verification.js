@@ -1,29 +1,36 @@
-const Sequelize = require('sequelize')
+const { Sequelize, Model } = require('sequelize')
 
 const sequelize = require('../utils/database')
 
-const PhoneVerification = sequelize.define('phoneVerification', {
-	phoneNumber: {
-		type: Sequelize.STRING,
-		allowNull: false,
-		unique: true,
-		primaryKey: true,
-	},
-	verifyCode: {
-		type: Sequelize.STRING,
-		allowNull: true,
-		defaultValue: null,
-	},
-	verifyCodeExp: {
-		type: Sequelize.BIGINT,
-		allowNull: true,
-		defaultValue: null,
-	},
-	verified: {
-		type: Sequelize.BOOLEAN,
-		allowNull: false,
-		defaultValue: false,
-	},
-})
+class PhoneVerification extends Model {}
 
+PhoneVerification.init(
+	{
+		phoneNumber: {
+			type: Sequelize.STRING,
+			allowNull: false,
+			unique: true,
+			primaryKey: true,
+		},
+		verifyCode: {
+			type: Sequelize.STRING,
+			allowNull: true,
+			defaultValue: null,
+		},
+		verifyCodeExp: {
+			type: Sequelize.BIGINT,
+			allowNull: true,
+			defaultValue: null,
+		},
+		verified: {
+			type: Sequelize.BOOLEAN,
+			allowNull: false,
+			defaultValue: false,
+		},
+	},
+	{
+		sequelize,
+		modelName: 'phone_verification',
+	}
+)
 module.exports = PhoneVerification

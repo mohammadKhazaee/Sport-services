@@ -69,7 +69,7 @@ exports.postLogin = async (req, res, next) => {
 		const token = jwt.sign({ userId: user.userId.toString() }, process.env.JWT_SECRET, {
 			expiresIn: '1h',
 		})
-		const { password, resetToken, resetTokenExp, createdAt, updatedAt, ...responseUser } =
+		const { password, updatedAt, createdAt, resetToken, resetTokenExp, ...responseUser } =
 			user.dataValues
 		res.status(200).json({ token: token, user: responseUser })
 	} catch (err) {
@@ -169,7 +169,7 @@ exports.postCheckEmail = async (req, res, next) => {
 	}
 }
 
-exports.postResetPassword = async (req, res, next) => {
+exports.patchResetPassword = async (req, res, next) => {
 	try {
 		const errors = validationResult(req).array()
 		if (errors.length > 0) {

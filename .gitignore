@@ -6,7 +6,9 @@ public/bower_components
 .bowerrc
 test.js
 temp.js
+temp/*
 *.orig
 images/*
 !.gitkeep
 *.txt
+*.csv
