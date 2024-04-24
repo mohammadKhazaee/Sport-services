@@ -232,7 +232,6 @@ exports.putComplex = [
 			if (!isDup) throw { message: 'Registration number already exists', code: 409 }
 			return true
 		}),
-	,
 	body('phone_number')
 		.trim()
 		.notEmpty()
