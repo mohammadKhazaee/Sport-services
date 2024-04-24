@@ -29,7 +29,7 @@ exports.getComplexes = async (req, res, next) => {
 			size,
 			categoryId,
 		}
-		const [complexes, totalCount] = await Promise.All([
+		const [complexes, totalCount] = await Promise.all([
 			Complex.getComplexes(filters, {
 				sortType,
 				page,
