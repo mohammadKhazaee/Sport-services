@@ -36,4 +36,14 @@ module.exports = class TimeHelper {
 		const sumSec = baseSec + additive * 60
 		return this.toTimeString(sumSec)
 	}
+
+	static isTime(time) {
+		const [hour, min, sec] = time.split(':')
+		const [h, m, s] = [+hour, +min, +sec]
+
+		if (!hour || !min || !sec) return false
+		if (hour.length !== 2 || min.length !== 2 || sec.length !== 2) return false
+		if (isNaN(h) || isNaN(m) || isNaN(s)) return false
+		return h >= 0 && h < 24 && m >= 0 && m <= 59 && s >= 0 && s <= 59
+	}
 }

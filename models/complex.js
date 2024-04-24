@@ -90,6 +90,15 @@ class Complex extends Model {
 		})
 	}
 
+	static async exists({ registration_number }) {
+		const whereClause = {}
+
+		if (registration_number) whereClause.registration_number = registration_number
+
+		const count = await Complex.count({ where: whereClause })
+		return count > 0
+	}
+
 	static fetchComplexById(complexId) {
 		return Complex.findByPk(complexId, {
 			include: ['facilities', Comment],
@@ -161,8 +170,7 @@ Complex.init(
 		},
 		description: {
 			type: Sequelize.STRING,
-			allowNull: true,
-			defaultValue: null,
+			allowNull: false,
 		},
 		score: {
 			type: Sequelize.TINYINT,

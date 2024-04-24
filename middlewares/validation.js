@@ -2,10 +2,12 @@ const { body, query } = require('express-validator')
 const bcrypt = require('bcryptjs')
 
 const User = require('../models/user')
+const Complex = require('../models/complex')
 const PhoneVerification = require('../models/phone-verification')
 const cities = require('../data/cities.json')
 const provinces = require('../data/provinces.json')
 const Category = require('../models/category')
+const TimeHelper = require('../utils/timeHelper')
 
 const phoneNumberRegex = /^09[0-9]{9}$/
 const englishRegex = /^[a-zA-Z ]+$/
@@ -13,6 +15,8 @@ const persianRegex =
 	/^[ \u06A9\u06AF\u06C0\u06CC\u060C\u062A\u062B\u062C\u062D\u062E\u062F\u063A\u064A\u064B\u064C\u064D\u064E\u064F\u067E\u0670\u0686\u0698\u200C\u0621-\u0629\u0630-\u0639\u0641-\u0654]+$/
 const complexSortOptions = ['PRICE_DESC', 'PRICE_ASC', 'SCORE_ASC', 'SCORE_DESC']
 const sizeOptions = [5, 6, 7, 8, 9, 10, 11]
+const sessionLengthOptions = [60, 75, 90, 120]
+const registration_numberLength = 11
 
 exports.postLogin = [
 	body('phoneNumber')
@@ -179,12 +183,95 @@ exports.postCheckEmail = [
 		.normalizeEmail({ gmail_remove_dots: false })
 		.custom(async (email) => {
 			const user = await User.findOne({ where: { email } })
-			console.log('here')
 			if (user) throw { message: 'E-Mail address already exists!', code: 409 }
 		}),
 ]
 
-exports.putComplex = []
+exports.putComplex = [
+	body('name')
+		.trim()
+		.notEmpty()
+		.withMessage('Name is empty')
+		.isLength({ min: 5 })
+		.withMessage('name is too short')
+		.custom((name) => {
+			if (!persianRegex.letter.test(name))
+				throw { message: 'name can only contain farsi characters', code: 422 }
+			return true
+		}),
+	body('province')
+		.trim()
+		.notEmpty()
+		.withMessage('province is empty')
+		.custom((province, { req }) => {
+			const foundProvince = provinces.find((p) => p.name === province)
+			if (!foundProvince) throw { message: 'wrong province', code: 422 }
+			req.province = foundProvince
+			return true
+		}),
+	body('city')
+		.trim()
+		.notEmpty()
+		.withMessage('city is empty')
+		.custom((city, { req }) => {
+			const foundCity = cities.find((c) => c.name === city && c.province_id === req.province.id)
+			if (!foundCity) throw { message: 'wrong city', code: 422 }
+			return true
+		}),
+	body('address').trim().notEmpty().withMessage('Address is empty'),
+	body('registration_number')
+		.trim()
+		.notEmpty()
+		.withMessage('Registration number is empty')
+		.isLength({ min: 11, max: 11 })
+		.withMessage('Registration number have to be 11 digit long')
+		.isNumeric({ no_symbols: true })
+		.withMessage('Registration number have to be number')
+		.custom(async (registration_number) => {
+			const isDup = await Complex.exists({ registration_number })
+			if (!isDup) throw { message: 'Registration number already exists', code: 409 }
+			return true
+		}),
+	,
+	body('phone_number')
+		.trim()
+		.notEmpty()
+		.withMessage('Phone number is empty')
+		.custom(async (phone_number) => {
+			if (!phoneNumberRegex.test(phone_number))
+				throw { message: 'wrong phone number format', code: 422 }
+			return true
+		}),
+	body('size').optional().isIn(sizeOptions).withMessage('Invalid size'),
+	body('price').optional().isInt({ min: 0 }).withMessage('Invalid price'),
+	body('openTime')
+		.optional()
+		.trim()
+		.notEmpty()
+		.withMessage('Open time is empty')
+		.custom((openTime) => {
+			if (!TimeHelper.isTime(openTime)) throw { message: 'Open time has wrong format', code: 422 }
+		}),
+	body('closeTime')
+		.optional()
+		.trim()
+		.notEmpty()
+		.withMessage('Close time is empty')
+		.custom((closeTime) => {
+			if (!TimeHelper.isTime(closeTime)) throw { message: 'Close time has wrong format', code: 422 }
+		}),
+	body('session_length')
+		.optional()
+		.isIn(sessionLengthOptions)
+		.withMessage('Invalid session length'),
+	body('description')
+		.trim()
+		.notEmpty()
+		.withMessage('Description is empty')
+		.isString()
+		.withMessage('Description must be a string'),
+	body('onlineRes').isBoolean().withMessage('onlineRes must be a boolean value'),
+]
 
 exports.getComlexes = [
 	query('minPrice', 'invalid minPrice').trim().optional().isNumeric({ no_symbols: false }),

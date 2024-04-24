@@ -92,6 +92,7 @@ exports.getComplex = async (req, res, next) => {
 	try {
 		const complex = await Complex.fetchComplexById(req.params.complexId)
 
+		if (!complex || (complex && complex.length === 0)) return next()
 		res.status(200).json({ message: 'complex fetched', complex })
 	} catch (err) {
 		if (!err.statusCode) err.statusCode = 500
@@ -105,6 +106,7 @@ exports.getComplexSchedule = async (req, res, next) => {
 
 		const schedules = await fetchComplexSchedules(complexId)
 
+		if (!schedules || (schedules && schedules.length === 0)) return next()
 		res.status(200).json({ message: 'complex schedules fetched', schedules })
 	} catch (err) {
 		if (!err.statusCode) err.statusCode = 500
