@@ -4,10 +4,20 @@ const sequelize = require('../utils/database')
 const Complex = require('./complex')
 
 class ComplexRequest extends Model {
-	static async sendRequest(complexId) {
+	static async sendRequest(complexId, type, option) {
+		switch (type) {
+			case 'create':
+				return sendCreateRequest(complexId)
+			default:
+				throw new Error('request type not supported')
+		}
+	}
+
+	static async sendCreateRequest(complexId) {
 		try {
 			return await ComplexRequest.create({
 				complexId,
+				type: 'create',
 			})
 		} catch (err) {
 			Complex.destroy({
@@ -33,10 +43,14 @@ ComplexRequest.init(
 			type: Sequelize.UUID,
 			allowNull: false,
 		},
-		status: {
-			type: Sequelize.ENUM(['new', 'in_progress', 'processed']),
+		visited: {
+			type: Sequelize.BOOLEAN,
 			allowNull: false,
-			defaultValue: 'new',
+			defaultValue: false,
+		},
+		type: {
+			type: Sequelize.ENUM(['create', 'update', 'delete']),
+			allowNull: false,
 		},
 	},
 	{
