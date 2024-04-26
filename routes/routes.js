@@ -1,7 +1,7 @@
 const express = require('express')
 
 const authRouter = require('./auth')
-const complexRouter = require('./complex')
+const complexRouter = require('./complex/complex')
 const mainRouter = require('./main')
 const isAuth = require('../middlewares/is-auth')
 

@@ -1,19 +1,14 @@
 const { validationResult } = require('express-validator')
 
-const Complex = require('../models/complex')
-const { fetchComplexSchedules } = require('../models/exerciseSession')
-const ComplexRequest = require('../models/complexRequest')
+const Complex = require('../../models/complex')
+const { fetchComplexSchedules } = require('../../models/exerciseSession')
+const buildError = require('../../utils/buildError')
 
 exports.getComplexes = async (req, res, next) => {
 	try {
 		const errors = validationResult(req).array()
 		if (errors.length > 0) {
-			let error = new Error('wrong query param.')
-			error.statusCode = 422
-			if (errors[0].msg.code) {
-				error.message = errors[0].msg.message
-				error.statusCode = errors[0].msg.code
-			} else error.message = errors[0].msg
+			const error = buildError(errors, 'wrong query param.')
 			return next(error)
 		}
 
@@ -29,7 +24,7 @@ exports.getComplexes = async (req, res, next) => {
 			size,
 			categoryId,
 		}
-		const [complexes, totalCount] = await Promise.All([
+		const [complexes, totalCount] = await Promise.all([
 			Complex.getComplexes(filters, {
 				sortType,
 				page,
@@ -38,50 +33,6 @@ exports.getComplexes = async (req, res, next) => {
 		])
 
 		res.status(200).json({ message: 'complexes fetched', complexes, totalCount })
-	} catch (err) {
-		if (!err.statusCode) err.statusCode = 500
-		next(err)
-	}
-}
-
-exports.putComplex = async (req, res, next) => {
-	try {
-		const {
-			name,
-			categories,
-			city,
-			address,
-			size,
-			onlineRes,
-			price,
-			openTime,
-			closeTime,
-			session_length,
-			facilities,
-			description,
-			phone_number,
-			registration_number,
-		} = req.body
-
-		const complex = new Complex({
-			name,
-			city,
-			address,
-			size,
-			onlineRes,
-			price,
-			openTime,
-			closeTime,
-			session_length: session_length.toString(),
-			description,
-			phoneNumber: phone_number,
-			registration_number,
-			userId: req.userId,
-		})
-		const complexDoc = await complex.save({ facilities, categories })
-		await ComplexRequest.sendRequest(complexDoc.complexId)
-
-		res.status(200).json({ message: 'complex created', complex })
 	} catch (err) {
 		if (!err.statusCode) err.statusCode = 500
 		next(err)

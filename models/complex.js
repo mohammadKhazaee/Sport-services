@@ -90,10 +90,12 @@ class Complex extends Model {
 		})
 	}
 
-	static async exists({ registration_number }) {
+	static async exists({ registration_number, complexId, verified }) {
 		const whereClause = {}
 
 		if (registration_number) whereClause.registration_number = registration_number
+		if (complexId) whereClause.complexId = complexId
+		if (verified) whereClause.verified = verified
 
 		const count = await Complex.count({ where: whereClause })
 		return count > 0
