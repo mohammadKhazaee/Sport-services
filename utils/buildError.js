@@ -1,5 +1,3 @@
-const { validationResult } = require('express-validator')
-
 module.exports = (errors, msg, statusCode = 422) => {
 	const error = new Error(msg)
 	error.statusCode = statusCode

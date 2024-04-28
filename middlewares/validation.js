@@ -76,7 +76,7 @@ exports.putSignup = [
 		.isLength({ min: 3 })
 		.withMessage('first name is too short')
 		.custom((fName) => {
-			if (!(persianRegex.letter.test(fName) || englishRegex.test(fName)))
+			if (!(persianRegex.test(fName) || englishRegex.test(fName)))
 				throw { message: 'first name can only contain farsi or english characters', code: 422 }
 			return true
 		}),
@@ -87,7 +87,7 @@ exports.putSignup = [
 		.isLength({ min: 3 })
 		.withMessage('last name is too short')
 		.custom((lName) => {
-			if (!(persianRegex.letter.test(lName) || englishRegex.test(lName)))
+			if (!(persianRegex.test(lName) || englishRegex.test(lName)))
 				throw { message: 'last name can only contain farsi or english characters', code: 422 }
 			return true
 		}),
@@ -253,26 +253,16 @@ exports.complex = {
 				.isLength({ min: 5 })
 				.withMessage('name is too short')
 				.custom((name) => {
-					if (!persianRegex.letter.test(name))
+					if (!persianRegex.test(name))
 						throw { message: 'name can only contain farsi characters', code: 422 }
-					return true
-				}),
-			body('province')
-				.trim()
-				.notEmpty()
-				.withMessage('province is empty')
-				.custom((province, { req }) => {
-					const foundProvince = provinces.find((p) => p.name === province)
-					if (!foundProvince) throw { message: 'wrong province', code: 422 }
-					req.province = foundProvince
 					return true
 				}),
 			body('city')
 				.trim()
 				.notEmpty()
 				.withMessage('city is empty')
-				.custom((city, { req }) => {
-					const foundCity = cities.find((c) => c.name === city && c.province_id === req.province.id)
+				.custom((city) => {
+					const foundCity = cities.find((c) => c.name === city)
 					if (!foundCity) throw { message: 'wrong city', code: 422 }
 					return true
 				}),
@@ -287,7 +277,7 @@ exports.complex = {
 				.withMessage('Registration number have to be number')
 				.custom(async (registration_number) => {
 					const isDup = await Complex.exists({ registration_number })
-					if (!isDup) throw { message: 'Registration number already exists', code: 409 }
+					if (isDup) throw { message: 'Registration number already exists', code: 409 }
 					return true
 				}),
 			body('phone_number')

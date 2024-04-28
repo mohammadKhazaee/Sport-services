@@ -5,6 +5,12 @@ const buildError = require('../../utils/buildError')
 
 exports.postCreateRequest = async (req, res, next) => {
 	try {
+		const errors = validationResult(req).array()
+		if (errors.length > 0) {
+			const error = buildError(errors, 'invalid input.')
+			return next(error)
+		}
+
 		const {
 			name,
 			categories,
@@ -49,13 +55,21 @@ exports.postCreateRequest = async (req, res, next) => {
 
 exports.postRemoveRequest = async (req, res, next) => {
 	try {
+		const complexId = req.params.complexId
+		const ownsComplex = await Complex.exists({ complexId, userId: req.userId })
+		if (!ownsComplex) {
+			const error = new Error('Not Autherized')
+			error.statusCode = 403
+			throw error
+		}
+
 		const errors = validationResult(req).array()
 		if (errors.length > 0) {
 			const error = buildError(errors, 'invalid input.')
 			return next(error)
 		}
 
-		await ComplexRequest.sendRequest(req.params.complexId, 'delete')
+		await ComplexRequest.sendRequest(complexId, 'delete')
 
 		res.status(201).json({ message: 'complex deletion request sent' })
 	} catch (err) {
@@ -66,6 +80,14 @@ exports.postRemoveRequest = async (req, res, next) => {
 
 exports.postUpdateRequest = async (req, res, next) => {
 	try {
+		const complexId = req.params.complexId
+		const ownsComplex = await Complex.exists({ complexId, userId: req.userId })
+		if (!ownsComplex) {
+			const error = new Error('Not Autherized')
+			error.statusCode = 403
+			throw error
+		}
+
 		const errors = validationResult(req).array()
 		if (errors.length > 0) {
 			const error = buildError(errors, 'invalid input.')
