@@ -18,10 +18,10 @@ Router.delete(
 )
 
 // /admin/request/:requestId/complex/reject => DELETE
-// Router.delete(
-// 	'/:requestId/complex/reject',
-// 	validator.deleteRejectRequest,
-// 	requestController.deleteRejectRequest
-// )
+Router.delete(
+	'/:requestId/complex/reject',
+	validator.deleteRejectRequest,
+	requestController.deleteRejectRequest
+)
 
 module.exports = Router

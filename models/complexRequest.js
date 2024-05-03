@@ -43,6 +43,35 @@ async function acceptUpdateRequest(request) {
 	}
 }
 
+//  reject requests private funtions
+
+async function rejectCreateRequest(request) {
+	try {
+		return await Complex.destroy({ where: { complexId: request.complexId } })
+	} catch (error) {
+		err.message = 'problem while rejecting create complex request'
+		throw err
+	}
+}
+
+async function rejectDeleteRequest(request) {
+	try {
+		return await request.destroy()
+	} catch (error) {
+		err.message = 'problem while rejecting delete complex request'
+		throw err
+	}
+}
+
+async function rejectUpdateRequest(request) {
+	try {
+		return await request.destroy()
+	} catch (error) {
+		err.message = 'problem while rejecting update complex request'
+		throw err
+	}
+}
+
 //  send requests private funtions
 
 async function sendCreateRequest(complexId) {
@@ -124,17 +153,20 @@ class ComplexRequest extends Model {
 		}
 	}
 
-	// static async rejectRequest(requestId) {
-	// 	try {
-	// 		return await sequelize.transaction(async () => {
-	// 			const request = await ComplexRequest.findByPk(requestId)
+	static async rejectRequest(requestId) {
+		const request = await ComplexRequest.findByPk(requestId)
 
-	// 			return await Complex.detroy({ where: { complexId: request.complexId } })
-	// 		})
-	// 	} catch (error) {
-	// 		throw error
-	// 	}
-	// }
+		switch (request.type) {
+			case 'create':
+				return rejectCreateRequest(request)
+			case 'delete':
+				return rejectDeleteRequest(request)
+			case 'update':
+				return rejectUpdateRequest(request)
+			default:
+				throw new Error('complex request type not supported')
+		}
+	}
 
 	static async exists({ complexId }) {
 		const whereClause = {}
