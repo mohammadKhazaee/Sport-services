@@ -73,6 +73,14 @@ class ComplexRequest extends Model {
 		const count = await ComplexRequest.count({ where: whereClause })
 		return count > 0
 	}
+
+	static fetchRequests({ type }) {
+		const whereClause = {}
+
+		if (type) whereClause.type = type
+
+		return ComplexRequest.findAll({ where: whereClause })
+	}
 }
 
 ComplexRequest.init(

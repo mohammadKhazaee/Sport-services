@@ -19,6 +19,7 @@ const sizeOptions = [5, 6, 7, 8, 9, 10, 11]
 const sessionLengthOptions = [60, 75, 90, 120]
 const registration_numberLength = 11
 const uuidRegex = /[0-9a-zA-Z]{8}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{12}/
+const requestTypes = ['create', 'update', 'delete']
 
 exports.postLogin = [
 	body('phoneNumber')
@@ -189,6 +190,47 @@ exports.postCheckEmail = [
 		}),
 ]
 
+exports.admin = {
+	request: {
+		getComplexRequests: [query('type', 'invalid type').trim().optional().isIn(requestTypes)],
+		postRemoveRequest: [
+			param('complexId')
+				.trim()
+				.notEmpty()
+				.withMessage('complexId is empty')
+				.custom(async (complexId) => {
+					if (!uuidRegex.test(complexId)) throw { message: 'complexId should be uuid', code: 401 }
+
+					const complex = await Complex.exists({ complexId, verified: true })
+					if (!complex) throw { message: 'could not find the complex', code: 404 }
+
+					const request = await ComplexRequest.exists({ complexId })
+					if (request)
+						throw { message: 'another request already submited for this complex', code: 409 }
+					return true
+				}),
+		],
+		postUpdateRequest: [
+			param('complexId')
+				.trim()
+				.notEmpty()
+				.withMessage('complexId is empty')
+				.custom(async (complexId) => {
+					if (!uuidRegex.test(complexId)) throw { message: 'complexId should be uuid', code: 401 }
+
+					const complex = await Complex.exists({ complexId, verified: true })
+					if (!complex) throw { message: 'could not find the complex', code: 404 }
+
+					const request = await ComplexRequest.exists({ complexId })
+					if (request)
+						throw { message: 'another request already submited for this complex', code: 409 }
+
+					return true
+				}),
+		],
+	},
+}
+
 exports.complex = {
 	getComlexes: [
 		query('minPrice', 'invalid minPrice').trim().optional().isNumeric({ no_symbols: false }),
@@ -299,6 +341,7 @@ exports.complex = {
 				.custom((openTime) => {
 					if (!TimeHelper.isTime(openTime))
 						throw { message: 'Open time has wrong format', code: 422 }
+					return true
 				}),
 			body('closeTime')
 				.optional()
@@ -308,6 +351,7 @@ exports.complex = {
 				.custom((closeTime) => {
 					if (!TimeHelper.isTime(closeTime))
 						throw { message: 'Close time has wrong format', code: 422 }
+					return true
 				}),
 			body('session_length')
 				.optional()
