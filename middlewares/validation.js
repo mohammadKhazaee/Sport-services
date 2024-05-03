@@ -193,24 +193,19 @@ exports.postCheckEmail = [
 exports.admin = {
 	request: {
 		getComplexRequests: [query('type', 'invalid type').trim().optional().isIn(requestTypes)],
-		postRemoveRequest: [
-			param('complexId')
+		deleteAcceptRequest: [
+			param('requestId')
 				.trim()
 				.notEmpty()
-				.withMessage('complexId is empty')
-				.custom(async (complexId) => {
-					if (!uuidRegex.test(complexId)) throw { message: 'complexId should be uuid', code: 401 }
+				.withMessage('requestId is empty')
+				.custom(async (requestId) => {
+					if (!uuidRegex.test(requestId)) throw { message: 'requestId should be uuid', code: 401 }
 
-					const complex = await Complex.exists({ complexId, verified: true })
-					if (!complex) throw { message: 'could not find the complex', code: 404 }
-
-					const request = await ComplexRequest.exists({ complexId })
-					if (request)
-						throw { message: 'another request already submited for this complex', code: 409 }
-					return true
+					const request = await Complex.exists({ requestId })
+					if (!request) throw { message: 'could not find the request', code: 404 }
 				}),
 		],
-		postUpdateRequest: [
+		deleteRejectRequest: [
 			param('complexId')
 				.trim()
 				.notEmpty()

@@ -127,6 +127,7 @@ Complex.hasOne(ComplexRequest, {
 ComplexRequest.belongsTo(Complex, { foreignKey: { name: 'complexId' } })
 
 ComplexRequest.hasOne(UpdateComplexData, {
+	as: 'updateCompleData',
 	onDelete: 'CASCADE',
 	foreignKey: { name: 'complexRequestId', allowNull: false },
 })

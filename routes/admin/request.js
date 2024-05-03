@@ -10,12 +10,12 @@ const Router = express.Router()
 // /admin/request/complex => GET
 Router.get('/complex', validator.getComplexRequests, requestController.getComplexRequests)
 
-// /admin/request/:requestId/complex/accept => PATCH
-// Router.patch(
-// 	'/:requestId/complex/accept',
-// 	validator.patchAcceptRequest,
-// 	requestController.patchAcceptRequest
-// )
+// /admin/request/:requestId/complex/accept => DELETE
+Router.delete(
+	'/:requestId/complex/accept',
+	validator.deleteAcceptRequest,
+	requestController.deleteAcceptRequest
+)
 
 // /admin/request/:requestId/complex/reject => DELETE
 // Router.delete(

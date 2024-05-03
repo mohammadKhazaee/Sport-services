@@ -197,12 +197,14 @@ Complex.init(
 )
 
 Complex.addHook('beforeValidate', (complex) => {
-	const provinceId = cities.find((c) => c.name === complex.city).province_id
-	const province = provinces.find((p) => p.id === provinceId)
-	complex.province = province.name
+	if (complex.city) {
+		const provinceId = cities.find((c) => c.name === complex.city).province_id
+		const province = provinces.find((p) => p.id === provinceId)
+		complex.province = province.name
+	}
 })
 
-Complex.addHook('afterSave', async (complex, options) => {
+Complex.addHook('afterCreate', async (complex, options) => {
 	try {
 		const facilities = options.facilities
 		const categories = options.categories
