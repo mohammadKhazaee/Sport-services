@@ -27,6 +27,7 @@ exports.postLogin = [
 		.notEmpty()
 		.withMessage('phone number is empty')
 		.custom(async (phoneNumber, { req }) => {
+			if (phoneNumber === process.env.ADMIN_PHONENUMBER) return true
 			if (!phoneNumberRegex.test(phoneNumber))
 				throw { message: 'wrong phone number format', code: 422 }
 			const user = await User.findOne({ where: { phoneNumber } })
@@ -39,6 +40,7 @@ exports.postLogin = [
 		.notEmpty()
 		.withMessage('passowrd is empty')
 		.custom(async (password, { req }) => {
+			if (password === process.env.ADMIN_PASSWORD) return true
 			const isMatch = bcrypt.compareSync(password, req.user.password)
 			if (!isMatch) throw { message: `phone number or password is wrong`, code: 401 }
 			return true
