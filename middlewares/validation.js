@@ -194,7 +194,10 @@ exports.postCheckEmail = [
 
 exports.admin = {
 	request: {
-		getComplexRequests: [query('type', 'invalid type').trim().optional().isIn(requestTypes)],
+		getComplexRequests: [
+			query('page', 'wrong page number').trim().optional().isNumeric({ no_symbols: true }),
+			query('type', 'invalid type').trim().optional().isIn(requestTypes),
+		],
 		deleteAcceptRequest: [
 			param('requestId')
 				.trim()
@@ -278,6 +281,10 @@ exports.complex = {
 			.customSanitizer((size) => +size),
 	],
 	request: {
+		getRequests: [
+			query('page', 'wrong page number').trim().optional().isNumeric({ no_symbols: true }),
+			query('type', 'invalid type').trim().optional().isIn(requestTypes),
+		],
 		getRequest: [
 			param('requestId')
 				.trim()

@@ -10,11 +10,17 @@ exports.getComplexRequests = async (req, res, next) => {
 			return next(error)
 		}
 
-		const type = req.query.type
+		const { page, type } = req.query
 
-		const requests = await ComplexRequest.fetchRequests({ type })
+		const [requests, totalCount] = await Promise.all([
+			ComplexRequest.fetchRequests({
+				page,
+				type,
+			}),
+			ComplexRequest.countAll({ type }),
+		])
 
-		res.status(200).json({ message: 'success', requests })
+		res.status(200).json({ message: 'requests fetched', requests, totalCount })
 	} catch (err) {
 		if (!err.statusCode) err.statusCode = 500
 		next(err)

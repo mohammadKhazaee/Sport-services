@@ -4,6 +4,8 @@ const sequelize = require('../utils/database')
 const Complex = require('./complex')
 const UpdateComplexData = require('./update-complex-data')
 
+const REQUEST_PER_PAGE = 5
+
 //  accept requests private funtions
 
 async function acceptCreateRequest(request) {
@@ -191,12 +193,43 @@ class ComplexRequest extends Model {
 		return ComplexRequest.findByPk(requestId, { include: ['complex'] })
 	}
 
-	static fetchRequests({ type }) {
-		const whereClause = {}
+	static fetchRequests({ type, userId, page = 1 }) {
+		const whereClause = {},
+			includeArr = []
 
 		if (type) whereClause.type = type
+		if (userId) {
+			includeArr.push({
+				association: 'complex',
+				where: { userId },
+				attributes: ['userId', 'complexId'],
+			})
+		}
 
-		return ComplexRequest.findAll({ where: whereClause })
+		return ComplexRequest.findAll({
+			where: whereClause,
+			include: includeArr,
+			offset: (page - 1) * REQUEST_PER_PAGE,
+			limit: REQUEST_PER_PAGE,
+		})
+	}
+
+	static async countAll({ type, userId } = {}) {
+		const whereClause = {},
+			includeArr = []
+
+		if (type) whereClause.type = type
+		if (userId) {
+			includeArr.push({
+				association: 'complex',
+				where: { userId },
+			})
+		}
+
+		return ComplexRequest.count({
+			where: whereClause,
+			include: includeArr,
+		})
 	}
 }
 

@@ -5,12 +5,13 @@ const adminRouter = require('./admin/admin')
 const complexRouter = require('./complex/complex')
 const mainRouter = require('./main')
 const isAdmin = require('../middlewares/is-admin')
+const isAuth = require('../middlewares/is-auth')
 
 const Router = express.Router()
 
 Router.use('/auth', authRouter)
 Router.use('/complex', complexRouter)
-Router.use('/admin', isAdmin, adminRouter)
+Router.use('/admin', isAuth, isAdmin, adminRouter)
 Router.use(mainRouter)
 
 // Handle not found routes
