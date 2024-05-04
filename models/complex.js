@@ -23,9 +23,11 @@ async function buildFilterQuery({
 	city,
 	size,
 	categoryIds,
+	userId,
 }) {
 	const findQuery = {}
 
+	if (userId) findQuery.userId = userId
 	if (verified) findQuery.verified = verified
 	if (onlineRes) findQuery.onlineRes = onlineRes
 	if (city) findQuery.city = city
@@ -81,7 +83,14 @@ class Complex extends Model {
 		const findQuery = await buildFilterQuery(filters)
 
 		return Complex.findAll({
-			include: ['facilities'],
+			include: [
+				{
+					model: Facility,
+					through: {
+						attributes: [],
+					},
+				},
+			],
 			where: findQuery,
 			order: [orderQuery],
 			offset: (page - 1) * COMPLEX_PER_PAGE,

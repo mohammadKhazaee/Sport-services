@@ -192,6 +192,12 @@ exports.postCheckEmail = [
 		}),
 ]
 
+exports.profile = {
+	getComplexes: [
+		query('page', 'wrong page number').trim().optional().isNumeric({ no_symbols: true }),
+	],
+}
+
 exports.admin = {
 	request: {
 		getComplexRequests: [
