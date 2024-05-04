@@ -198,6 +198,18 @@ exports.admin = {
 			query('page', 'wrong page number').trim().optional().isNumeric({ no_symbols: true }),
 			query('type', 'invalid type').trim().optional().isIn(requestTypes),
 		],
+		getComplexRequest: [
+			param('requestId')
+				.trim()
+				.notEmpty()
+				.withMessage('requestId is empty')
+				.custom(async (requestId) => {
+					if (!uuidRegex.test(requestId)) throw { message: 'requestId should be uuid', code: 401 }
+
+					const request = await Complex.exists({ requestId })
+					if (!request) throw { message: 'could not find the request', code: 404 }
+				}),
+		],
 		deleteAcceptRequest: [
 			param('requestId')
 				.trim()

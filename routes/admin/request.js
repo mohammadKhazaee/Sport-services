@@ -10,6 +10,9 @@ const Router = express.Router()
 // /admin/request/complex => GET
 Router.get('/complex', validator.getComplexRequests, requestController.getComplexRequests)
 
+// /admin/request/complex/:requestId => GET
+Router.get('/complex/:requestId', validator.getComplexRequest, requestController.getComplexRequest)
+
 // /admin/request/:requestId/complex/accept => DELETE
 Router.delete(
 	'/:requestId/complex/accept',

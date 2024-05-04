@@ -46,6 +46,7 @@ exports.getRequest = async (req, res, next) => {
 		}
 
 		const request = await ComplexRequest.fetchById(requestId)
+		if (!request) return next()
 
 		res.status(200).json({ message: 'request fetched', request })
 	} catch (err) {

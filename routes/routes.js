@@ -16,7 +16,7 @@ Router.use(mainRouter)
 
 // Handle not found routes
 Router.use((req, res, next) => {
-	res.status(404).json({ message: 'Page Not Found' })
+	res.status(404).json({ message: 'Page or Resource Not Found' })
 })
 
 // Handles server-side errors
