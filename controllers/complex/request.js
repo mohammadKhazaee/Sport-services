@@ -3,6 +3,30 @@ const Complex = require('../../models/complex')
 const ComplexRequest = require('../../models/complexRequest')
 const buildError = require('../../utils/buildError')
 
+exports.getRequest = async (req, res, next) => {
+	try {
+		const errors = validationResult(req).array()
+		if (errors.length > 0) {
+			const error = buildError(errors, 'invalid input.')
+			return next(error)
+		}
+		const requestId = req.params.requestId
+		const ownsRequest = await ComplexRequest.exists({ requestId, userId: req.userId })
+		if (!ownsRequest) {
+			const error = new Error('Not Authorized')
+			error.statusCode = 403
+			throw error
+		}
+
+		const request = await ComplexRequest.fetchById(requestId)
+
+		res.status(200).json({ message: 'request fetched', request })
+	} catch (err) {
+		if (!err.statusCode) err.statusCode = 500
+		next(err)
+	}
+}
+
 exports.postCreateRequest = async (req, res, next) => {
 	try {
 		const errors = validationResult(req).array()
@@ -58,7 +82,7 @@ exports.postRemoveRequest = async (req, res, next) => {
 		const complexId = req.params.complexId
 		const ownsComplex = await Complex.exists({ complexId, userId: req.userId })
 		if (!ownsComplex) {
-			const error = new Error('Not Autherized')
+			const error = new Error('Not Authorized')
 			error.statusCode = 403
 			throw error
 		}
@@ -83,7 +107,7 @@ exports.postUpdateRequest = async (req, res, next) => {
 		const complexId = req.params.complexId
 		const ownsComplex = await Complex.exists({ complexId, userId: req.userId })
 		if (!ownsComplex) {
-			const error = new Error('Not Autherized')
+			const error = new Error('Not Authorized')
 			error.statusCode = 403
 			throw error
 		}

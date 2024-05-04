@@ -7,6 +7,9 @@ const {
 
 const Router = express.Router()
 
+// /complex/request/:requestId => GET
+Router.get('/:requestId', validator.getRequest, requestController.getRequest)
+
 // /complex/request/create => POST
 Router.post('/create', validator.postCreateRequest, requestController.postCreateRequest)
 

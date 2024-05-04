@@ -18,7 +18,7 @@ const complexSortOptions = ['PRICE_DESC', 'PRICE_ASC', 'SCORE_ASC', 'SCORE_DESC'
 const sizeOptions = [5, 6, 7, 8, 9, 10, 11]
 const sessionLengthOptions = [60, 75, 90, 120]
 const registration_numberLength = 11
-const uuidRegex = /[0-9a-zA-Z]{8}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{12}/
+const uuidRegex = /^[0-9a-zA-Z]{8}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{12}$/
 const requestTypes = ['create', 'update', 'delete']
 
 exports.postLogin = [
@@ -278,6 +278,18 @@ exports.complex = {
 			.customSanitizer((size) => +size),
 	],
 	request: {
+		getRequest: [
+			param('requestId')
+				.trim()
+				.notEmpty()
+				.withMessage('requestId is empty')
+				.custom(async (requestId) => {
+					if (!uuidRegex.test(requestId)) throw { message: 'requestId should be uuid', code: 401 }
+
+					const request = await Complex.exists({ requestId })
+					if (!request) throw { message: 'could not find the request', code: 404 }
+				}),
+		],
 		postCreateRequest: [
 			body('name')
 				.trim()

@@ -31,7 +31,7 @@ async function acceptDeleteRequest(request) {
 async function acceptUpdateRequest(request) {
 	try {
 		return await sequelize.transaction(async () => {
-			const requestData = await request.getUpdateCompleData()
+			const requestData = await request.getUpdateComplexData()
 			const updatedFields = JSON.parse(requestData.updated_fields)
 
 			await Complex.update(updatedFields, { where: { complexId: request.complexId } })
@@ -168,13 +168,27 @@ class ComplexRequest extends Model {
 		}
 	}
 
-	static async exists({ complexId }) {
-		const whereClause = {}
+	static async exists({ complexId, userId }) {
+		const whereClause = {},
+			includeArr = []
 
 		if (complexId) whereClause.complexId = complexId
+		if (userId) {
+			includeArr.push({
+				association: 'complex',
+				where: { userId },
+			})
+		}
 
-		const count = await ComplexRequest.count({ where: whereClause })
+		const count = await ComplexRequest.count({
+			where: whereClause,
+			include: includeArr,
+		})
 		return count > 0
+	}
+
+	static fetchById(requestId) {
+		return ComplexRequest.findByPk(requestId, { include: ['complex'] })
 	}
 
 	static fetchRequests({ type }) {
