@@ -7,7 +7,6 @@ const Category = require('./category')
 const Comment = require('./comment')
 const cities = require('../data/cities.json')
 const provinces = require('../data/provinces.json')
-const User = require('./user')
 const Facility = require('./facility')
 const ExerciseSession = require('./exerciseSession')
 const TimeHelper = require('../utils/timeHelper')
@@ -24,9 +23,11 @@ async function buildFilterQuery({
 	city,
 	size,
 	categoryIds,
+	userId,
 }) {
 	const findQuery = {}
 
+	if (userId) findQuery.userId = userId
 	if (verified) findQuery.verified = verified
 	if (onlineRes) findQuery.onlineRes = onlineRes
 	if (city) findQuery.city = city
@@ -82,7 +83,14 @@ class Complex extends Model {
 		const findQuery = await buildFilterQuery(filters)
 
 		return Complex.findAll({
-			include: ['facilities'],
+			include: [
+				{
+					model: Facility,
+					through: {
+						attributes: [],
+					},
+				},
+			],
 			where: findQuery,
 			order: [orderQuery],
 			offset: (page - 1) * COMPLEX_PER_PAGE,
@@ -90,10 +98,13 @@ class Complex extends Model {
 		})
 	}
 
-	static async exists({ registration_number }) {
+	static async exists({ registration_number, complexId, verified, userId }) {
 		const whereClause = {}
 
 		if (registration_number) whereClause.registration_number = registration_number
+		if (complexId) whereClause.complexId = complexId
+		if (verified) whereClause.verified = verified
+		if (userId) whereClause.userId = userId
 
 		const count = await Complex.count({ where: whereClause })
 		return count > 0
@@ -195,12 +206,14 @@ Complex.init(
 )
 
 Complex.addHook('beforeValidate', (complex) => {
-	const provinceId = cities.find((c) => c.name === complex.city).province_id
-	const province = provinces.find((p) => p.id === provinceId)
-	complex.province = province.name
+	if (complex.city) {
+		const provinceId = cities.find((c) => c.name === complex.city).province_id
+		const province = provinces.find((p) => p.id === provinceId)
+		complex.province = province.name
+	}
 })
 
-Complex.addHook('afterSave', async (complex, options) => {
+Complex.addHook('afterCreate', async (complex, options) => {
 	try {
 		const facilities = options.facilities
 		const categories = options.categories

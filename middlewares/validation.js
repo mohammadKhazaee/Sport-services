@@ -1,4 +1,4 @@
-const { body, query } = require('express-validator')
+const { body, query, param } = require('express-validator')
 const bcrypt = require('bcryptjs')
 
 const User = require('../models/user')
@@ -8,6 +8,7 @@ const cities = require('../data/cities.json')
 const provinces = require('../data/provinces.json')
 const Category = require('../models/category')
 const TimeHelper = require('../utils/timeHelper')
+const ComplexRequest = require('../models/complexRequest')
 
 const phoneNumberRegex = /^09[0-9]{9}$/
 const englishRegex = /^[a-zA-Z ]+$/
@@ -17,6 +18,8 @@ const complexSortOptions = ['PRICE_DESC', 'PRICE_ASC', 'SCORE_ASC', 'SCORE_DESC'
 const sizeOptions = [5, 6, 7, 8, 9, 10, 11]
 const sessionLengthOptions = [60, 75, 90, 120]
 const registration_numberLength = 11
+const uuidRegex = /^[0-9a-zA-Z]{8}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{12}$/
+const requestTypes = ['create', 'update', 'delete']
 
 exports.postLogin = [
 	body('phoneNumber')
@@ -24,6 +27,7 @@ exports.postLogin = [
 		.notEmpty()
 		.withMessage('phone number is empty')
 		.custom(async (phoneNumber, { req }) => {
+			if (phoneNumber === process.env.ADMIN_PHONENUMBER) return true
 			if (!phoneNumberRegex.test(phoneNumber))
 				throw { message: 'wrong phone number format', code: 422 }
 			const user = await User.findOne({ where: { phoneNumber } })
@@ -36,6 +40,7 @@ exports.postLogin = [
 		.notEmpty()
 		.withMessage('passowrd is empty')
 		.custom(async (password, { req }) => {
+			if (password === process.env.ADMIN_PASSWORD) return true
 			const isMatch = bcrypt.compareSync(password, req.user.password)
 			if (!isMatch) throw { message: `phone number or password is wrong`, code: 401 }
 			return true
@@ -74,7 +79,7 @@ exports.putSignup = [
 		.isLength({ min: 3 })
 		.withMessage('first name is too short')
 		.custom((fName) => {
-			if (!(persianRegex.letter.test(fName) || englishRegex.test(fName)))
+			if (!(persianRegex.test(fName) || englishRegex.test(fName)))
 				throw { message: 'first name can only contain farsi or english characters', code: 422 }
 			return true
 		}),
@@ -85,7 +90,7 @@ exports.putSignup = [
 		.isLength({ min: 3 })
 		.withMessage('last name is too short')
 		.custom((lName) => {
-			if (!(persianRegex.letter.test(lName) || englishRegex.test(lName)))
+			if (!(persianRegex.test(lName) || englishRegex.test(lName)))
 				throw { message: 'last name can only contain farsi or english characters', code: 422 }
 			return true
 		}),
@@ -187,142 +192,253 @@ exports.postCheckEmail = [
 		}),
 ]
 
-exports.putComplex = [
-	body('name')
-		.trim()
-		.notEmpty()
-		.withMessage('Name is empty')
-		.isLength({ min: 5 })
-		.withMessage('name is too short')
-		.custom((name) => {
-			if (!persianRegex.letter.test(name))
-				throw { message: 'name can only contain farsi characters', code: 422 }
-			return true
-		}),
-	body('province')
-		.trim()
-		.notEmpty()
-		.withMessage('province is empty')
-		.custom((province, { req }) => {
-			const foundProvince = provinces.find((p) => p.name === province)
-			if (!foundProvince) throw { message: 'wrong province', code: 422 }
-			req.province = foundProvince
-			return true
-		}),
-	body('city')
-		.trim()
-		.notEmpty()
-		.withMessage('city is empty')
-		.custom((city, { req }) => {
-			const foundCity = cities.find((c) => c.name === city && c.province_id === req.province.id)
-			if (!foundCity) throw { message: 'wrong city', code: 422 }
-			return true
-		}),
-	body('address').trim().notEmpty().withMessage('Address is empty'),
-	body('registration_number')
-		.trim()
-		.notEmpty()
-		.withMessage('Registration number is empty')
-		.isLength({ min: 11, max: 11 })
-		.withMessage('Registration number have to be 11 digit long')
-		.isNumeric({ no_symbols: true })
-		.withMessage('Registration number have to be number')
-		.custom(async (registration_number) => {
-			const isDup = await Complex.exists({ registration_number })
-			if (!isDup) throw { message: 'Registration number already exists', code: 409 }
-			return true
-		}),
-	body('phone_number')
-		.trim()
-		.notEmpty()
-		.withMessage('Phone number is empty')
-		.custom(async (phone_number) => {
-			if (!phoneNumberRegex.test(phone_number))
-				throw { message: 'wrong phone number format', code: 422 }
-			return true
-		}),
-	body('size').optional().isIn(sizeOptions).withMessage('Invalid size'),
-	body('price').optional().isInt({ min: 0 }).withMessage('Invalid price'),
-	body('openTime')
-		.optional()
-		.trim()
-		.notEmpty()
-		.withMessage('Open time is empty')
-		.custom((openTime) => {
-			if (!TimeHelper.isTime(openTime)) throw { message: 'Open time has wrong format', code: 422 }
-		}),
-	body('closeTime')
-		.optional()
-		.trim()
-		.notEmpty()
-		.withMessage('Close time is empty')
-		.custom((closeTime) => {
-			if (!TimeHelper.isTime(closeTime)) throw { message: 'Close time has wrong format', code: 422 }
-		}),
-	body('session_length')
-		.optional()
-		.isIn(sessionLengthOptions)
-		.withMessage('Invalid session length'),
-	body('description')
-		.trim()
-		.notEmpty()
-		.withMessage('Description is empty')
-		.isString()
-		.withMessage('Description must be a string'),
-	body('onlineRes').isBoolean().withMessage('onlineRes must be a boolean value'),
-]
+exports.profile = {
+	getComplexes: [
+		query('page', 'wrong page number').trim().optional().isNumeric({ no_symbols: true }),
+	],
+}
 
-exports.getComlexes = [
-	query('minPrice', 'invalid minPrice').trim().optional().isNumeric({ no_symbols: false }),
-	query('maxPrice', 'invalid maxPrice').trim().optional().isNumeric({ no_symbols: false }),
-	query('onlineRes', 'invalid onlineRes').trim().optional().isBoolean().toBoolean(),
-	query('facilities', 'invalid facility ids')
-		.trim()
-		.optional()
-		.custom((facilities) => {
-			if (!facilities) return true
-			const facilitiesArr = facilities.split(',').map((f) => +f.trim())
-			for (const f of facilitiesArr)
-				if (isNaN(f)) throw { message: 'wrong facilities filter', code: 422 }
-			return true
-		}),
-	query('sortType', 'invalid sortType')
-		.trim()
-		.toUpperCase()
-		.optional()
-		.isIn(complexSortOptions)
-		.customSanitizer((sortType) => {
-			const sortParts = sortType.split('_')
-			switch (sortParts[0]) {
-				case 'PRICE':
-					return ['maxPrice', sortParts[1]]
-				case 'SCORE':
-					return ['score', sortParts[1]]
-			}
-		}),
-	query('city', 'invalid city')
-		.trim()
-		.optional()
-		.custom((city) => {
-			const foundCity = cities.find((c) => c.name === city)
-			if (!foundCity) throw { message: 'wrong city', code: 422 }
-			return true
-		}),
-	query('categoryId', 'invalid categoryId')
-		.trim()
-		.optional()
-		.custom(async (categoryId) => {
-			const foundCat = await Category.findByPk(categoryId)
-			if (!foundCat) throw { message: 'wrong category', code: 422 }
-			return true
-		}),
-	query('page', 'wrong page number').trim().optional().isNumeric({ no_symbols: true }),
-	query('size')
-		.trim()
-		.optional()
-		.custom(async (size) => {
-			if (!sizeOptions.find((s) => s === +size)) throw { message: 'invalid size', code: 422 }
-			return true
-		})
-		.customSanitizer((size) => +size),
-]
+exports.admin = {
+	request: {
+		getComplexRequests: [
+			query('page', 'wrong page number').trim().optional().isNumeric({ no_symbols: true }),
+			query('type', 'invalid type').trim().optional().isIn(requestTypes),
+		],
+		getComplexRequest: [
+			param('requestId')
+				.trim()
+				.notEmpty()
+				.withMessage('requestId is empty')
+				.custom(async (requestId) => {
+					if (!uuidRegex.test(requestId)) throw { message: 'requestId should be uuid', code: 422 }
+
+					const request = await Complex.exists({ requestId })
+					if (!request) throw { message: 'could not find the request', code: 404 }
+				}),
+		],
+		deleteAcceptRequest: [
+			param('requestId')
+				.trim()
+				.notEmpty()
+				.withMessage('requestId is empty')
+				.custom(async (requestId) => {
+					if (!uuidRegex.test(requestId)) throw { message: 'requestId should be uuid', code: 422 }
+
+					const request = await Complex.exists({ requestId })
+					if (!request) throw { message: 'could not find the request', code: 404 }
+				}),
+		],
+		deleteRejectRequest: [
+			param('requestId')
+				.trim()
+				.notEmpty()
+				.withMessage('requestId is empty')
+				.custom(async (requestId) => {
+					if (!uuidRegex.test(requestId)) throw { message: 'requestId should be uuid', code: 422 }
+
+					const request = await Complex.exists({ requestId })
+					if (!request) throw { message: 'could not find the request', code: 404 }
+				}),
+		],
+	},
+}
+
+exports.complex = {
+	getComlexes: [
+		query('minPrice', 'invalid minPrice').trim().optional().isNumeric({ no_symbols: false }),
+		query('maxPrice', 'invalid maxPrice').trim().optional().isNumeric({ no_symbols: false }),
+		query('onlineRes', 'invalid onlineRes').trim().optional().isBoolean().toBoolean(),
+		query('facilities', 'invalid facility ids')
+			.trim()
+			.optional()
+			.custom((facilities) => {
+				if (!facilities) return true
+				const facilitiesArr = facilities.split(',').map((f) => +f.trim())
+				for (const f of facilitiesArr)
+					if (isNaN(f)) throw { message: 'wrong facilities filter', code: 422 }
+				return true
+			}),
+		query('sortType', 'invalid sortType')
+			.trim()
+			.toUpperCase()
+			.optional()
+			.isIn(complexSortOptions)
+			.customSanitizer((sortType) => {
+				const sortParts = sortType.split('_')
+				switch (sortParts[0]) {
+					case 'PRICE':
+						return ['maxPrice', sortParts[1]]
+					case 'SCORE':
+						return ['score', sortParts[1]]
+				}
+			}),
+		query('city', 'invalid city')
+			.trim()
+			.optional()
+			.custom((city) => {
+				const foundCity = cities.find((c) => c.name === city)
+				if (!foundCity) throw { message: 'wrong city', code: 422 }
+				return true
+			}),
+		query('categoryId', 'invalid categoryId')
+			.trim()
+			.optional()
+			.custom(async (categoryId) => {
+				const foundCat = await Category.findByPk(categoryId)
+				if (!foundCat) throw { message: 'wrong category', code: 422 }
+				return true
+			}),
+		query('page', 'wrong page number').trim().optional().isNumeric({ no_symbols: true }),
+		query('size')
+			.trim()
+			.optional()
+			.custom(async (size) => {
+				if (!sizeOptions.find((s) => s === +size)) throw { message: 'invalid size', code: 422 }
+				return true
+			})
+			.customSanitizer((size) => +size),
+	],
+	request: {
+		getRequests: [
+			query('page', 'wrong page number').trim().optional().isNumeric({ no_symbols: true }),
+			query('type', 'invalid type').trim().optional().isIn(requestTypes),
+		],
+		getRequest: [
+			param('requestId')
+				.trim()
+				.notEmpty()
+				.withMessage('requestId is empty')
+				.custom(async (requestId) => {
+					if (!uuidRegex.test(requestId)) throw { message: 'requestId should be uuid', code: 422 }
+
+					const request = await Complex.exists({ requestId })
+					if (!request) throw { message: 'could not find the request', code: 404 }
+				}),
+		],
+		postCreateRequest: [
+			body('name')
+				.trim()
+				.notEmpty()
+				.withMessage('Name is empty')
+				.isLength({ min: 5 })
+				.withMessage('name is too short')
+				.custom((name) => {
+					if (!persianRegex.test(name))
+						throw { message: 'name can only contain farsi characters', code: 422 }
+					return true
+				}),
+			body('city')
+				.trim()
+				.notEmpty()
+				.withMessage('city is empty')
+				.custom((city) => {
+					const foundCity = cities.find((c) => c.name === city)
+					if (!foundCity) throw { message: 'wrong city', code: 422 }
+					return true
+				}),
+			body('address').trim().notEmpty().withMessage('Address is empty'),
+			body('registration_number')
+				.trim()
+				.notEmpty()
+				.withMessage('Registration number is empty')
+				.isLength({ min: registration_numberLength, max: registration_numberLength })
+				.withMessage(`Registration number have to be ${registration_numberLength} digit long`)
+				.isNumeric({ no_symbols: true })
+				.withMessage('Registration number have to be number')
+				.custom(async (registration_number) => {
+					const isDup = await Complex.exists({ registration_number })
+					if (isDup) throw { message: 'Registration number already exists', code: 409 }
+					return true
+				}),
+			body('phone_number')
+				.trim()
+				.notEmpty()
+				.withMessage('Phone number is empty')
+				.custom(async (phone_number) => {
+					if (!phoneNumberRegex.test(phone_number))
+						throw { message: 'wrong phone number format', code: 422 }
+					return true
+				}),
+			body('size').optional().isIn(sizeOptions).withMessage('Invalid size'),
+			body('price').optional().isInt({ min: 0 }).withMessage('Invalid price'),
+			body('openTime')
+				.optional()
+				.trim()
+				.notEmpty()
+				.withMessage('Open time is empty')
+				.custom((openTime) => {
+					if (!TimeHelper.isTime(openTime))
+						throw { message: 'Open time has wrong format', code: 422 }
+					return true
+				}),
+			body('closeTime')
+				.optional()
+				.trim()
+				.notEmpty()
+				.withMessage('Close time is empty')
+				.custom((closeTime) => {
+					if (!TimeHelper.isTime(closeTime))
+						throw { message: 'Close time has wrong format', code: 422 }
+					return true
+				}),
+			body('session_length')
+				.optional()
+				.isIn(sessionLengthOptions)
+				.withMessage('Invalid session length'),
+			body('description')
+				.trim()
+				.notEmpty()
+				.withMessage('Description is empty')
+				.isString()
+				.withMessage('Description must be a string'),
+			body('onlineRes').isBoolean().withMessage('onlineRes must be a boolean value'),
+			body('facilities')
+				.trim()
+				.notEmpty()
+				.withMessage('facilities is empty')
+				.isArray({ min: 1 })
+				.withMessage('facilities must be an array with atleast 1 facility id in it'),
+			body('categories')
+				.trim()
+				.notEmpty()
+				.withMessage('categories is empty')
+				.isArray({ min: 1 })
+				.withMessage('categories must be an array with atleast 1 category id in it'),
+		],
+		postRemoveRequest: [
+			param('complexId')
+				.trim()
+				.notEmpty()
+				.withMessage('complexId is empty')
+				.custom(async (complexId) => {
+					if (!uuidRegex.test(complexId)) throw { message: 'complexId should be uuid', code: 422 }
+
+					const complex = await Complex.exists({ complexId, verified: true })
+					if (!complex) throw { message: 'could not find the complex', code: 404 }
+
+					const request = await ComplexRequest.exists({ complexId })
+					if (request)
+						throw { message: 'another request already submited for this complex', code: 409 }
+					return true
+				}),
+		],
+		postUpdateRequest: [
+			param('complexId')
+				.trim()
+				.notEmpty()
+				.withMessage('complexId is empty')
+				.custom(async (complexId) => {
+					if (!uuidRegex.test(complexId)) throw { message: 'complexId should be uuid', code: 422 }
+
+					const complex = await Complex.exists({ complexId, verified: true })
+					if (!complex) throw { message: 'could not find the complex', code: 404 }
+
+					const request = await ComplexRequest.exists({ complexId })
+					if (request)
+						throw { message: 'another request already submited for this complex', code: 409 }
+
+					return true
+				}),
+		],
+	},
+}

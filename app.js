@@ -20,6 +20,7 @@ const Comment = require('./models/comment')
 const Category = require('./models/category')
 const ExerciseSession = require('./models/exerciseSession')
 const ComplexRequest = require('./models/complexRequest')
+const UpdateComplexData = require('./models/update-complex-data')
 
 const PORT = process.env.PORT || 3000
 const LIARA_URL = process.env.LIARA_URL || 'http://localhost:' + PORT
@@ -115,15 +116,22 @@ Comment.belongsTo(Comment, {
 	onUpdate: 'CASCADE',
 })
 
+User.hasMany(Comment, { onDelete: 'CASCADE', foreignKey: { name: 'userId', allowNull: false } })
+Comment.belongsTo(User, { foreignKey: { name: 'userId' } })
+
 // complexRequest related associations
-Complex.hasMany(ComplexRequest, {
+Complex.hasOne(ComplexRequest, {
 	onDelete: 'CASCADE',
 	foreignKey: { name: 'complexId', allowNull: false },
 })
-ComplexRequest.belongsTo(Complex, { foreignKey: { name: 'complexId' } })
+ComplexRequest.belongsTo(Complex, { as: 'complex', foreignKey: { name: 'complexId' } })
 
-User.hasMany(Comment, { onDelete: 'CASCADE', foreignKey: { name: 'userId', allowNull: false } })
-Comment.belongsTo(User, { foreignKey: { name: 'userId' } })
+ComplexRequest.hasOne(UpdateComplexData, {
+	as: 'updateComplexData',
+	onDelete: 'CASCADE',
+	foreignKey: { name: 'complexRequestId', allowNull: false },
+})
+UpdateComplexData.belongsTo(ComplexRequest, { foreignKey: { name: 'complexRequestId' } })
 
 sequelize
 	.sync()
