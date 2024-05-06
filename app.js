@@ -21,6 +21,7 @@ const Category = require('./models/category')
 const ExerciseSession = require('./models/exerciseSession')
 const ComplexRequest = require('./models/complexRequest')
 const UpdateComplexData = require('./models/update-complex-data')
+const ComplexImage = require('./models/complex-image')
 
 const PORT = process.env.PORT || 3000
 const LIARA_URL = process.env.LIARA_URL || 'http://localhost:' + PORT
@@ -49,7 +50,7 @@ app.use(helmet())
 app.use(morgan('combined'))
 app.use(compression())
 app.use(bodyParser.json()) // application/json
-app.use(multer({ storage: fileStorage, fileFilter: fileFilter }).single('image'))
+app.use(multer({ storage: fileStorage, fileFilter: fileFilter }).array('image', 3))
 app.use('/images', express.static(path.join(__dirname, 'images')))
 
 app.use((req, res, next) => {
@@ -109,6 +110,15 @@ Complex.hasMany(Comment, {
 	foreignKey: { name: 'complexId', allowNull: false },
 })
 Comment.belongsTo(Complex, { foreignKey: { name: 'complexId' } })
+
+// complex image related associations
+Complex.hasMany(ComplexImage, {
+	as: 'imageUrl',
+	onDelete: 'CASCADE',
+	foreignKey: { name: 'complexId', allowNull: false },
+	hooks: true,
+})
+ComplexImage.belongsTo(Complex, { foreignKey: { name: 'complexId' }, hooks: true })
 
 Comment.belongsTo(Comment, {
 	foreignKey: { name: 'parentId' },

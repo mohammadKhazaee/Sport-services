@@ -395,15 +395,25 @@ exports.complex = {
 			body('facilities')
 				.trim()
 				.notEmpty()
-				.withMessage('facilities is empty')
+				.withMessage('facilities field is empty')
 				.isArray({ min: 1 })
-				.withMessage('facilities must be an array with atleast 1 facility id in it'),
+				.withMessage('facilities must be an array with atleast 1 facility id in it')
+				.custom((facilities) => {
+					const isValid = facilities.every((f) => f && f !== '' && !isNaN(+f))
+					if (!isValid) throw { message: 'facilities elements must be number', code: 422 }
+					return true
+				}),
 			body('categories')
 				.trim()
 				.notEmpty()
-				.withMessage('categories is empty')
+				.withMessage('categories field is empty')
 				.isArray({ min: 1 })
-				.withMessage('categories must be an array with atleast 1 category id in it'),
+				.withMessage('categories must be an array with atleast 1 category id in it')
+				.custom((categories) => {
+					const isValid = categories.every((f) => f && f !== '' && !isNaN(+f))
+					if (!isValid) throw { message: 'categories elements must be number', code: 422 }
+					return true
+				}),
 		],
 		postRemoveRequest: [
 			param('complexId')

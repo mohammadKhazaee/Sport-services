@@ -3,6 +3,8 @@ const { Sequelize, Model } = require('sequelize')
 const sequelize = require('../utils/database')
 const Complex = require('./complex')
 const UpdateComplexData = require('./update-complex-data')
+const ComplexImage = require('./complex-image')
+const { deleteFile } = require('../utils/file')
 
 const REQUEST_PER_PAGE = 5
 
@@ -15,7 +17,7 @@ async function acceptCreateRequest(request) {
 
 			return await request.destroy()
 		})
-	} catch (error) {
+	} catch (err) {
 		err.message = 'problem while accepting create complex request'
 		throw err
 	}
@@ -23,8 +25,14 @@ async function acceptCreateRequest(request) {
 
 async function acceptDeleteRequest(request) {
 	try {
-		return await Complex.destroy({ where: { complexId: request.complexId } })
-	} catch (error) {
+		const complexId = request.complexId
+
+		const images = await ComplexImage.findAll({ where: { complexId } })
+		Promise.all(images.map((i) => deleteFile(i.imageUrl)))
+
+		return await Complex.destroy({ where: { complexId } })
+	} catch (err) {
+		console.log(err)
 		err.message = 'problem while accepting delete complex request'
 		throw err
 	}
@@ -40,8 +48,9 @@ async function acceptUpdateRequest(request) {
 
 			return await request.destroy()
 		})
-	} catch (error) {
-		throw error
+	} catch (err) {
+		err.message = 'problem while accepting update complex request'
+		throw err
 	}
 }
 
@@ -50,7 +59,7 @@ async function acceptUpdateRequest(request) {
 async function rejectCreateRequest(request) {
 	try {
 		return await Complex.destroy({ where: { complexId: request.complexId } })
-	} catch (error) {
+	} catch (err) {
 		err.message = 'problem while rejecting create complex request'
 		throw err
 	}
@@ -59,7 +68,7 @@ async function rejectCreateRequest(request) {
 async function rejectDeleteRequest(request) {
 	try {
 		return await request.destroy()
-	} catch (error) {
+	} catch (err) {
 		err.message = 'problem while rejecting delete complex request'
 		throw err
 	}
@@ -68,7 +77,7 @@ async function rejectDeleteRequest(request) {
 async function rejectUpdateRequest(request) {
 	try {
 		return await request.destroy()
-	} catch (error) {
+	} catch (err) {
 		err.message = 'problem while rejecting update complex request'
 		throw err
 	}
@@ -143,6 +152,12 @@ class ComplexRequest extends Model {
 	static async acceptRequest(requestId) {
 		const request = await ComplexRequest.findByPk(requestId)
 
+		if (!request) {
+			const err = new Error('could not find request')
+			err.statusCode = 404
+			throw err
+		}
+
 		switch (request.type) {
 			case 'create':
 				return acceptCreateRequest(request)
@@ -157,6 +172,12 @@ class ComplexRequest extends Model {
 
 	static async rejectRequest(requestId) {
 		const request = await ComplexRequest.findByPk(requestId)
+
+		if (!request) {
+			const err = new Error('could not find request')
+			err.statusCode = 404
+			throw err
+		}
 
 		switch (request.type) {
 			case 'create':

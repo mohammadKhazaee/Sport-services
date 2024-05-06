@@ -10,6 +10,7 @@ const provinces = require('../data/provinces.json')
 const Facility = require('./facility')
 const ExerciseSession = require('./exerciseSession')
 const TimeHelper = require('../utils/timeHelper')
+const ComplexImage = require('./complex-image')
 
 const COMPLEX_PER_PAGE = 15
 const WEEKS_COVERED = 12
@@ -218,6 +219,11 @@ Complex.addHook('afterCreate', async (complex, options) => {
 		const facilities = options.facilities
 		const categories = options.categories
 
+		const imageUrlObjs = options.imageUrls.map((i) => ({
+			complexId: complex.complexId,
+			imageUrl: i,
+		}))
+
 		const sessionsPerDay = TimeHelper.divide(
 			complex.openTime,
 			complex.closeTime,
@@ -242,6 +248,7 @@ Complex.addHook('afterCreate', async (complex, options) => {
 					})
 				}
 
+		const imagePromise = ComplexImage.bulkCreate(imageUrlObjs)
 		const sessionPromise = ExerciseSession.bulkCreate(sessions)
 		const facilityPromise = Facility.findAll({
 			where: { facilityId: { [Op.in]: facilities } },
@@ -250,11 +257,8 @@ Complex.addHook('afterCreate', async (complex, options) => {
 			where: { categoryId: { [Op.in]: categories } },
 		})
 
-		const [facilityInstances, categoryInstances, sessionInstances] = await Promise.all([
-			facilityPromise,
-			categoryPromise,
-			sessionPromise,
-		])
+		const [facilityInstances, categoryInstances, sessionInstances, imageInstances] =
+			await Promise.all([facilityPromise, categoryPromise, sessionPromise, imagePromise])
 
 		if (facilityInstances.length !== facilities.length) {
 			const error = new Error('invalid facility ids')
@@ -271,8 +275,10 @@ Complex.addHook('afterCreate', async (complex, options) => {
 			complex.addFacilities(facilityInstances),
 			complex.addCategories(categoryInstances),
 			complex.addExercise_sessions(sessionInstances),
+			complex.addImageUrl(imageInstances),
 		])
 	} catch (err) {
+		console.log(err)
 		complex.destroy()
 		if (!err.statusCode) throw new Error('problem while saving associations complex')
 		throw err

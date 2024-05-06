@@ -79,6 +79,7 @@ exports.postCreateRequest = async (req, res, next) => {
 			phone_number,
 			registration_number,
 		} = req.body
+		const imageUrls = req.files.map((file) => '/' + file.path.replace('\\', '/'))
 
 		const complex = new Complex({
 			name,
@@ -95,7 +96,7 @@ exports.postCreateRequest = async (req, res, next) => {
 			registration_number,
 			userId: req.userId,
 		})
-		const complexDoc = await complex.save({ facilities, categories })
+		const complexDoc = await complex.save({ facilities, categories, imageUrls })
 		await ComplexRequest.sendRequest(complexDoc.complexId, 'create')
 
 		res.status(201).json({ message: 'complex creation request sent', complex })
