@@ -210,7 +210,7 @@ exports.admin = {
 				.notEmpty()
 				.withMessage('requestId is empty')
 				.custom(async (requestId) => {
-					if (!uuidRegex.test(requestId)) throw { message: 'requestId should be uuid', code: 401 }
+					if (!uuidRegex.test(requestId)) throw { message: 'requestId should be uuid', code: 422 }
 
 					const request = await Complex.exists({ requestId })
 					if (!request) throw { message: 'could not find the request', code: 404 }
@@ -222,7 +222,7 @@ exports.admin = {
 				.notEmpty()
 				.withMessage('requestId is empty')
 				.custom(async (requestId) => {
-					if (!uuidRegex.test(requestId)) throw { message: 'requestId should be uuid', code: 401 }
+					if (!uuidRegex.test(requestId)) throw { message: 'requestId should be uuid', code: 422 }
 
 					const request = await Complex.exists({ requestId })
 					if (!request) throw { message: 'could not find the request', code: 404 }
@@ -234,7 +234,7 @@ exports.admin = {
 				.notEmpty()
 				.withMessage('requestId is empty')
 				.custom(async (requestId) => {
-					if (!uuidRegex.test(requestId)) throw { message: 'requestId should be uuid', code: 401 }
+					if (!uuidRegex.test(requestId)) throw { message: 'requestId should be uuid', code: 422 }
 
 					const request = await Complex.exists({ requestId })
 					if (!request) throw { message: 'could not find the request', code: 404 }
@@ -309,7 +309,7 @@ exports.complex = {
 				.notEmpty()
 				.withMessage('requestId is empty')
 				.custom(async (requestId) => {
-					if (!uuidRegex.test(requestId)) throw { message: 'requestId should be uuid', code: 401 }
+					if (!uuidRegex.test(requestId)) throw { message: 'requestId should be uuid', code: 422 }
 
 					const request = await Complex.exists({ requestId })
 					if (!request) throw { message: 'could not find the request', code: 404 }
@@ -399,7 +399,7 @@ exports.complex = {
 				.notEmpty()
 				.withMessage('complexId is empty')
 				.custom(async (complexId) => {
-					if (!uuidRegex.test(complexId)) throw { message: 'complexId should be uuid', code: 401 }
+					if (!uuidRegex.test(complexId)) throw { message: 'complexId should be uuid', code: 422 }
 
 					const complex = await Complex.exists({ complexId, verified: true })
 					if (!complex) throw { message: 'could not find the complex', code: 404 }
@@ -416,7 +416,7 @@ exports.complex = {
 				.notEmpty()
 				.withMessage('complexId is empty')
 				.custom(async (complexId) => {
-					if (!uuidRegex.test(complexId)) throw { message: 'complexId should be uuid', code: 401 }
+					if (!uuidRegex.test(complexId)) throw { message: 'complexId should be uuid', code: 422 }
 
 					const complex = await Complex.exists({ complexId, verified: true })
 					if (!complex) throw { message: 'could not find the complex', code: 404 }
