@@ -392,6 +392,18 @@ exports.complex = {
 				.isString()
 				.withMessage('Description must be a string'),
 			body('onlineRes').isBoolean().withMessage('onlineRes must be a boolean value'),
+			body('facilities')
+				.trim()
+				.notEmpty()
+				.withMessage('facilities is empty')
+				.isArray({ min: 1 })
+				.withMessage('facilities must be an array with atleast 1 facility id in it'),
+			body('categories')
+				.trim()
+				.notEmpty()
+				.withMessage('categories is empty')
+				.isArray({ min: 1 })
+				.withMessage('categories must be an array with atleast 1 category id in it'),
 		],
 		postRemoveRequest: [
 			param('complexId')
